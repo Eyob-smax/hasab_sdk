@@ -23,6 +23,9 @@ type ChatHistoryResponse = {
         created_at: Date;
         messages: ChatMessage[];
     }[];
+} | {
+    success: boolean;
+    message: string;
 };
 type ChatTitle = {
     success: true;

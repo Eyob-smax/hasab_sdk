@@ -3,8 +3,8 @@ import {
   HasabApiError,
   HasabNetworkError,
   HasabUnknownError,
-} from "../common/errors";
-import { ChatOptionsConfig } from "../common/types";
+} from "../common/errors.js";
+import { ChatOptionsConfig } from "../common/types.js";
 import axios, { AxiosInstance, AxiosError } from "axios";
 
 export async function chatStream(

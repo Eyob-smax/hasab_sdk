@@ -1,5 +1,5 @@
 import { AxiosInstance } from "axios";
-import { HasabError } from "./errors";
+import { HasabError } from "./errors.js";
 export interface ChatStreamOptions {
     message: string;
     model?: string;

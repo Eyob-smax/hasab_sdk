@@ -1,4 +1,4 @@
-import type { ChatHistoryResponse, ChatResponse, ChatTitle, TranscriptionResponse } from "./types/response";
+import type { ChatHistoryResponse, ChatResponse, ChatTitle, TranscriptionResponse } from "./types/response.js";
 import { ChatOptionsConfig } from "./common/types.js";
 import { Readable } from "stream";
 export declare class HasabClient {
@@ -12,10 +12,7 @@ export declare class HasabClient {
         streamResponse: (message: string, options?: ChatOptionsConfig) => Readable & {
             cancel: () => void;
         };
-        getChatHistory: () => Promise<ChatHistoryResponse | {
-            success: boolean;
-            message: string;
-        }>;
+        getChatHistory: () => Promise<ChatHistoryResponse>;
         getChatTitle: () => Promise<ChatTitle | {
             success: boolean;
             message: string;

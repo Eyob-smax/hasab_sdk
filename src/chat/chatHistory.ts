@@ -1,5 +1,5 @@
 import { AxiosInstance } from "axios";
-import type { ChatHistoryResponse } from "../types/response";
+import type { ChatHistoryResponse } from "../types/response.js";
 import {
   HasabApiError,
   HasabNetworkError,
@@ -8,7 +8,7 @@ import {
   HasabRateLimitError,
   HasabTimeoutError,
   HasabUnknownError,
-} from "../common/errors";
+} from "../common/errors.js";
 import { AxiosError } from "axios";
 
 export async function getChatHistory(

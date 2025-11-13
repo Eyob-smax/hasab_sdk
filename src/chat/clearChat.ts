@@ -7,8 +7,8 @@ import {
   HasabRateLimitError,
   HasabTimeoutError,
   HasabUnknownError,
-} from "../common/errors";
-import { ClearChat } from "../types/response";
+} from "../common/errors.js";
+import { ClearChat } from "../types/response.js";
 
 export async function clearChat(client: AxiosInstance): Promise<ClearChat> {
   try {

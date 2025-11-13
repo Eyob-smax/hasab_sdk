@@ -1,7 +1,4 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.BASE_URL = exports.CURRENT_VERSION = exports.URL = void 0;
-exports.URL = "https://hasab.co/api";
-exports.CURRENT_VERSION = "v1";
-exports.BASE_URL = `${exports.URL}/${exports.CURRENT_VERSION}`;
+export const URL = "https://hasab.co/api";
+export const CURRENT_VERSION = "v1";
+export const BASE_URL = `${URL}/${CURRENT_VERSION}`;
 //# sourceMappingURL=constants.js.map

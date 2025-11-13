@@ -1,12 +1,6 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.chatStream = chatStream;
-const errors_1 = require("../common/errors");
-const axios_1 = __importDefault(require("axios"));
-async function chatStream(message, client, onData, onError, onComplete, options) {
+import { HasabApiError, HasabNetworkError, HasabUnknownError, } from "../common/errors.js";
+import axios from "axios";
+export async function chatStream(message, client, onData, onError, onComplete, options) {
     let cancelled = false;
     const { model = "hasab-1-lite", maxTokens = 1024, tools, temperature = 0.7, timeout = 60000, } = options || {};
     const abortController = new AbortController();
@@ -35,12 +29,12 @@ async function chatStream(message, client, onData, onError, onComplete, options)
         if (cancelled)
             return () => { };
         let error;
-        if (axios_1.default.isAxiosError(err)) {
+        if (axios.isAxiosError(err)) {
             const axiosErr = err;
-            error = new errors_1.HasabApiError("Failed to start chat stream", axiosErr.response?.status ?? 500, axiosErr.response?.data);
+            error = new HasabApiError("Failed to start chat stream", axiosErr.response?.status ?? 500, axiosErr.response?.data);
         }
         else {
-            error = new errors_1.HasabNetworkError(err instanceof Error ? err.message : "Unknown network error");
+            error = new HasabNetworkError(err instanceof Error ? err.message : "Unknown network error");
         }
         onError(error);
         return () => { };
@@ -55,7 +49,7 @@ async function chatStream(message, client, onData, onError, onComplete, options)
             buffer += decoder.decode(raw, { stream: true });
         }
         catch (decodeErr) {
-            onError(new errors_1.HasabNetworkError(`Decode error: ${decodeErr instanceof Error
+            onError(new HasabNetworkError(`Decode error: ${decodeErr instanceof Error
                 ? decodeErr.message
                 : "Unknown decode issue"}`));
             return true; // Stop on decode failure
@@ -66,7 +60,7 @@ async function chatStream(message, client, onData, onError, onComplete, options)
             if (!line.trim())
                 continue;
             if (!line.startsWith("data: ")) {
-                onError(new errors_1.HasabApiError(`Invalid line format: ${line.substring(0, 50)}...`, 500));
+                onError(new HasabApiError(`Invalid line format: ${line.substring(0, 50)}...`, 500));
                 continue;
             }
             const jsonStr = line.slice(6).trim();
@@ -81,12 +75,12 @@ async function chatStream(message, client, onData, onError, onComplete, options)
                     onData(content);
                 }
                 else if (content != null) {
-                    onError(new errors_1.HasabApiError(`Unexpected content type: ${typeof content}`, 500, { parsed }));
+                    onError(new HasabApiError(`Unexpected content type: ${typeof content}`, 500, { parsed }));
                 }
             }
             catch (parseErr) {
                 // Don't crash the stream — emit error and continue
-                const parseError = new errors_1.HasabApiError(`Invalid JSON in stream: ${parseErr instanceof Error ? parseErr.message : "Parse error"}`, 500, { raw: jsonStr });
+                const parseError = new HasabApiError(`Invalid JSON in stream: ${parseErr instanceof Error ? parseErr.message : "Parse error"}`, 500, { raw: jsonStr });
                 onError(parseError);
                 // Continue processing other lines
             }
@@ -107,7 +101,7 @@ async function chatStream(message, client, onData, onError, onComplete, options)
         catch (err) {
             const handlerError = err instanceof Error
                 ? err
-                : new errors_1.HasabUnknownError("Unknown error in data handler");
+                : new HasabUnknownError("Unknown error in data handler");
             onError(handlerError);
             cleanup();
         }
@@ -124,7 +118,7 @@ async function chatStream(message, client, onData, onError, onComplete, options)
         catch (err) {
             const handlerError = err instanceof Error
                 ? err
-                : new errors_1.HasabUnknownError("Unknown error in end handler");
+                : new HasabUnknownError("Unknown error in end handler");
             onError(handlerError);
         }
         finally {
@@ -133,7 +127,7 @@ async function chatStream(message, client, onData, onError, onComplete, options)
     };
     const onErrorHandler = (err) => {
         if (!cancelled) {
-            onError(new errors_1.HasabNetworkError(err.message || "Stream error"));
+            onError(new HasabNetworkError(err.message || "Stream error"));
         }
         cleanup();
     };

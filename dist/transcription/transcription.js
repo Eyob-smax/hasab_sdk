@@ -1,28 +1,22 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.transcribe = transcribe;
-const constants_1 = require("../common/constants");
-const form_data_1 = __importDefault(require("form-data"));
-const fs_1 = __importDefault(require("fs"));
-const languageEnum_1 = require("../common/languageEnum");
-const errors_js_1 = require("../common/errors.js");
-async function transcribe(request, apikey, client) {
+import { BASE_URL } from "../common/constants";
+import FormData from "form-data";
+import fs from "fs";
+import { LanguageEnum } from "../common/languageEnum";
+import { HasabValidationError, HasabApiError } from "../common/errors.js";
+export async function transcribe(request, apikey, client) {
     if (!request.audio_file) {
-        throw new errors_js_1.HasabValidationError("Audio file is required.");
+        throw new HasabValidationError("Audio file is required.");
     }
     if (typeof request.audio_file === "string" &&
-        !fs_1.default.existsSync(request.audio_file)) {
-        throw new errors_js_1.HasabValidationError("Invalid or missing file path.");
+        !fs.existsSync(request.audio_file)) {
+        throw new HasabValidationError("Invalid or missing file path.");
     }
-    const form = new form_data_1.default();
+    const form = new FormData();
     if (typeof request.audio_file === "string") {
-        if (!fs_1.default.existsSync(request.audio_file)) {
-            throw new errors_js_1.HasabValidationError("Invalid or missing file path.");
+        if (!fs.existsSync(request.audio_file)) {
+            throw new HasabValidationError("Invalid or missing file path.");
         }
-        form.append("file", fs_1.default.createReadStream(request.audio_file));
+        form.append("file", fs.createReadStream(request.audio_file));
     }
     else if (request.audio_file instanceof Blob ||
         request.audio_file.buffer) {
@@ -33,7 +27,7 @@ async function transcribe(request, apikey, client) {
         form.append("file", request.audio_file, filename);
     }
     else {
-        throw new errors_js_1.HasabValidationError("Invalid type for audio file. Must be a path string, File, or Blob.");
+        throw new HasabValidationError("Invalid type for audio file. Must be a path string, File, or Blob.");
     }
     const defaults = {
         transcribe: true,
@@ -41,7 +35,7 @@ async function transcribe(request, apikey, client) {
         summarize: false,
         language: "auto",
         timestamps: false,
-        source_language: languageEnum_1.LanguageEnum.AUTO,
+        source_language: LanguageEnum.AUTO,
     };
     const payload = { ...defaults, ...request };
     Object.entries(payload).forEach(([key, value]) => {
@@ -50,7 +44,7 @@ async function transcribe(request, apikey, client) {
         }
     });
     try {
-        const response = await client.post(`${constants_1.BASE_URL}/upload-audio/`, form, {
+        const response = await client.post(`${BASE_URL}/upload-audio/`, form, {
             headers: {
                 ...form.getHeaders(),
                 Authorization: `Bearer ${apikey}`,
@@ -73,17 +67,17 @@ async function transcribe(request, apikey, client) {
             };
         }
         else {
-            throw new errors_js_1.HasabApiError(data.message || "API processing failed", response.status || 500, data);
+            throw new HasabApiError(data.message || "API processing failed", response.status || 500, data);
         }
     }
     catch (error) {
-        if (error instanceof errors_js_1.HasabValidationError) {
+        if (error instanceof HasabValidationError) {
             throw error;
         }
         if (error.response) {
             const status = error.response.status;
             const message = error.response.data?.message || `API call failed with status ${status}`;
-            throw new errors_js_1.HasabApiError(message, status, error.response.data);
+            throw new HasabApiError(message, status, error.response.data);
         }
         throw error;
     }

@@ -7,7 +7,7 @@ import {
   HasabRateLimitError,
   HasabTimeoutError,
   HasabUnknownError,
-} from "../common/errors";
+} from "../common/errors.js";
 
 export interface UpdateTitleResponse {
   success: boolean;

@@ -4,9 +4,9 @@ import {
   HasabApiError,
   HasabNetworkError,
   HasabValidationError,
-} from "../common/errors";
-import { ChatResponse } from "../types/response";
-import { ChatOptionsConfig } from "../common/types";
+} from "../common/errors.js";
+import { ChatResponse } from "../types/response.js";
+import { ChatOptionsConfig } from "../common/types.js";
 
 export async function chat(
   message: string,

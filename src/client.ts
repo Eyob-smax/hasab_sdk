@@ -5,7 +5,7 @@ import type {
   ChatResponse,
   ChatTitle,
   TranscriptionResponse,
-} from "./types/response";
+} from "./types/response.js";
 import {
   HasabError,
   HasabApiError,
@@ -15,8 +15,8 @@ import {
   HasabRateLimitError,
   HasabTimeoutError,
   HasabUnknownError,
-} from "./common/errors";
-import { BASE_URL } from "./common/constants";
+} from "./common/errors.js";
+import { BASE_URL } from "./common/constants.js";
 import { chat } from "./chat/chat.js";
 import { chatStream } from "./chat/chatStream.js";
 import { ChatOptionsConfig } from "./common/types.js";
@@ -202,14 +202,11 @@ export class HasabClient {
 
       return stream;
     },
-    getChatHistory: async (): Promise<
-      ChatHistoryResponse | { success: boolean; message: string }
-    > => {
+    getChatHistory: async (): Promise<ChatHistoryResponse> => {
       try {
         const result = await getChatHistory(this.apikey, this.client);
         return result;
       } catch (err) {
-        console.log(err);
         return {
           success: false,
           message: (err as Error).message,
@@ -270,6 +267,4 @@ const hasab = new HasabClient("HASAB_KEY_o64D9FHJz9f9TQ6by0828gfrrwOK5S");
 //     console.log("\nStream ended.");
 //   });
 
-hasab.chat.sendMessage("selam new").then((response) => {
-  console.log(response);
-});
+const chatHistory = await hasab.chat.getChatHistory();

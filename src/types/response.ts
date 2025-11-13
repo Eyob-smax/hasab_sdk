@@ -15,15 +15,20 @@ type ChatMessage = {
   created_at: Date;
 };
 
-type ChatHistoryResponse = {
-  success: boolean;
-  history: {
-    id: 1;
-    title: string;
-    created_at: Date;
-    messages: ChatMessage[];
-  }[];
-};
+type ChatHistoryResponse =
+  | {
+      success: boolean;
+      history: {
+        id: 1;
+        title: string;
+        created_at: Date;
+        messages: ChatMessage[];
+      }[];
+    }
+  | {
+      success: boolean;
+      message: string;
+    };
 
 type ChatTitle = {
   success: true;
