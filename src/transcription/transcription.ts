@@ -1,13 +1,13 @@
-import type { TranscriptionRequest } from "../types/request";
+import type { TranscriptionRequest } from "../types/request.js";
 import type {
   TranscriptionResponse,
   TranscriptionResponseFull,
-} from "../types/response";
+} from "../types/response.js";
 import { AxiosInstance } from "axios";
-import { BASE_URL } from "../common/constants";
+import { BASE_URL } from "../common/constants.js";
 import FormData from "form-data";
 import fs from "fs";
-import { LanguageEnum } from "../common/languageEnum";
+import { LanguageEnum } from "../common/languageEnum.js";
 import { HasabValidationError, HasabApiError } from "../common/errors.js";
 
 export async function transcribe(

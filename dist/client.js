@@ -9,6 +9,7 @@ import { getChatHistory } from "./chat/chatHistory.js";
 import { getChatTitle } from "./chat/getChatTitle.js";
 import { clearChat } from "./chat/clearChat.js";
 import { updateTitle } from "./chat/updateTitle.js";
+import { log } from "console";
 export class HasabClient {
     constructor(apikey) {
         this.chat = {
@@ -198,6 +199,6 @@ const hasab = new HasabClient("HASAB_KEY_o64D9FHJz9f9TQ6by0828gfrrwOK5S");
 //   .on("end", () => {
 //     console.log("\nStream ended.");
 //   });
-const chatHistory = await hasab.chat.getChatHistory();
-console.log(chatHistory.history);
+const chatHistory = await hasab.chat.getChatTitle();
+log(chatHistory);
 //# sourceMappingURL=client.js.map

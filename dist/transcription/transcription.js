@@ -1,7 +1,7 @@
-import { BASE_URL } from "../common/constants";
+import { BASE_URL } from "../common/constants.js";
 import FormData from "form-data";
 import fs from "fs";
-import { LanguageEnum } from "../common/languageEnum";
+import { LanguageEnum } from "../common/languageEnum.js";
 import { HasabValidationError, HasabApiError } from "../common/errors.js";
 export async function transcribe(request, apikey, client) {
     if (!request.audio_file) {
