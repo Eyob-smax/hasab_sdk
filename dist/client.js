@@ -199,4 +199,5 @@ const hasab = new HasabClient("HASAB_KEY_o64D9FHJz9f9TQ6by0828gfrrwOK5S");
 //     console.log("\nStream ended.");
 //   });
 const chatHistory = await hasab.chat.getChatHistory();
+console.log(chatHistory.history);
 //# sourceMappingURL=client.js.map

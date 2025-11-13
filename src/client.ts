@@ -268,3 +268,4 @@ const hasab = new HasabClient("HASAB_KEY_o64D9FHJz9f9TQ6by0828gfrrwOK5S");
 //   });
 
 const chatHistory = await hasab.chat.getChatHistory();
+console.log(chatHistory.history);
