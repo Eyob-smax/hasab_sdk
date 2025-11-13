@@ -7,6 +7,5 @@ type ChatRequest = {};
 type ChatSendMessage = {
   message: string;
   model?: string;
-  stream: boolean;
 };
 export type { TranscriptionRequest, ChatRequest, ChatSendMessage };

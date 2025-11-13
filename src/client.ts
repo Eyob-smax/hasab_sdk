@@ -1,6 +1,11 @@
 import axios, { AxiosInstance, AxiosError } from "axios";
 import { transcribe } from "./transcription/transcription.js";
-import type { TranscriptionResponse } from "./types/response";
+import type {
+  ChatHistoryResponse,
+  ChatResponse,
+  ChatTitle,
+  TranscriptionResponse,
+} from "./types/response";
 import {
   HasabError,
   HasabApiError,
@@ -12,8 +17,14 @@ import {
   HasabUnknownError,
 } from "./common/errors";
 import { BASE_URL } from "./common/constants";
-import { ChatSendMessage } from "./types/request.js";
 import { chat } from "./chat/chat.js";
+import { chatStream } from "./chat/chatStream.js";
+import { ChatOptionsConfig } from "./common/types.js";
+import { Readable } from "stream";
+import { getChatHistory } from "./chat/chatHistory.js";
+import { getChatTitle } from "./chat/getChatTitle.js";
+import { clearChat } from "./chat/clearChat.js";
+import { updateTitle } from "./chat/updateTitle.js";
 
 export class HasabClient {
   private apikey: string;
@@ -26,7 +37,7 @@ export class HasabClient {
     this.client = axios.create({
       baseURL: BASE_URL,
       headers: { Authorization: `Bearer ${apikey}` },
-      timeout: 30000,
+      timeout: 50000,
     });
 
     this.initializeInterceptors();
@@ -68,11 +79,15 @@ export class HasabClient {
             case 502:
             case 503:
             case 504:
+              console.error("Endpoint not found:", error.response.data);
+
               throw new HasabApiError(
                 "Server error. Please retry later.",
                 status
               );
             default:
+              console.error("Endpoint not found:", error.response.data);
+
               throw new HasabApiError(
                 (error.response.data as any)?.message || "API Error",
                 status
@@ -111,21 +126,15 @@ export class HasabClient {
   }
 
   public chat = {
-    sendMessage: async ({
-      message,
-      model = "hasab-1-lite",
-      stream = false,
-    }: ChatSendMessage) => {
+    sendMessage: async (
+      message: string,
+      options?: ChatOptionsConfig
+    ): Promise<ChatResponse> => {
       try {
-        const result = await chat(
-          message,
-          model,
-          stream,
-          this.client,
-          this.apikey
-        );
-        return;
+        const result = await chat(message, this.client, options);
+        return result;
       } catch (error: any) {
+        console.error("Chat error:", error);
         if (error instanceof HasabError) {
           return {
             success: false,
@@ -138,5 +147,129 @@ export class HasabClient {
         };
       }
     },
+    streamResponse: (
+      message: string,
+      options?: ChatOptionsConfig
+    ): Readable & { cancel: () => void } => {
+      const stream = new Readable({
+        read() {},
+      }) as Readable & { cancel: () => void };
+
+      let cancelFn: () => void = () => {};
+
+      const startStream = async () => {
+        try {
+          const { model, maxTokens, tools, temperature, timeout } =
+            options || {};
+
+          const cancel = await chatStream(
+            message,
+            this.client,
+            (chunk: string) => {
+              console.log("Received chunk:", chunk);
+              stream.push(chunk);
+            },
+            (err: any) => {
+              stream.emit("error", err);
+            },
+            () => {
+              stream.push(null);
+            },
+            { model, maxTokens, tools, temperature, timeout }
+          );
+
+          cancelFn = cancel;
+
+          stream.cancel = () => {
+            cancel();
+            stream.push(null);
+            stream.emit("close");
+          };
+        } catch (err: any) {
+          stream.emit("error", err);
+          stream.push(null);
+        }
+      };
+
+      startStream();
+
+      const originalDestroy = stream.destroy.bind(stream);
+      stream.destroy = function (this: typeof stream, error?: Error) {
+        cancelFn();
+        originalDestroy.call(this, error);
+        return this;
+      };
+
+      return stream;
+    },
+    getChatHistory: async (): Promise<
+      ChatHistoryResponse | { success: boolean; message: string }
+    > => {
+      try {
+        const result = await getChatHistory(this.apikey, this.client);
+        return result;
+      } catch (err) {
+        console.log(err);
+        return {
+          success: false,
+          message: (err as Error).message,
+        };
+      }
+    },
+
+    getChatTitle: async (): Promise<
+      ChatTitle | { success: boolean; message: string }
+    > => {
+      try {
+        const result = await getChatTitle(this.client);
+        return result;
+      } catch (error) {
+        return {
+          success: false,
+          message: (error as Error).message,
+        };
+      }
+    },
+    clearChat: async () => {
+      try {
+        const result = await clearChat(this.client);
+        return result;
+      } catch (error) {
+        return {
+          success: false,
+          message: (error as Error).message,
+        };
+      }
+    },
+    updateTitle: async (title: string) => {
+      try {
+        const result = await updateTitle(this.client, title);
+        return result;
+      } catch (error) {
+        return {
+          success: false,
+          message: (error as Error).message,
+        };
+      }
+    },
   };
 }
+
+const hasab = new HasabClient("HASAB_KEY_o64D9FHJz9f9TQ6by0828gfrrwOK5S");
+
+// hasab.chat
+//   .streamResponse("Hello, can you tell me a joke?")
+//   .on("data", (chunk) => {
+//     console.log(chunk);
+//     process.stdout.write(chunk);
+//   })
+//   .on("error", (err) => {
+//     console.error("Stream error:", err);
+//   })
+//   .on("end", () => {
+//     console.log("\nStream ended.");
+//   });
+
+hasab.chat.sendMessage("selam new").then((response) => {
+  console.log(response);
+});

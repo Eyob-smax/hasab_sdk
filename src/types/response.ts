@@ -1,8 +1,42 @@
-type ChatResponse = {
-  text: {
-    role: "assistant" | "user" | "system";
-    content: string;
-  };
+type ChatResponse =
+  | {
+      success: boolean;
+      message: {
+        role: "assistant" | "user" | "system";
+        content: string;
+      };
+      usage: any;
+    }
+  | { success: false; message: string; error?: string };
+
+type ChatMessage = {
+  role: string;
+  content: string;
+  created_at: Date;
+};
+
+type ChatHistoryResponse = {
+  success: boolean;
+  history: {
+    id: 1;
+    title: string;
+    created_at: Date;
+    messages: ChatMessage[];
+  }[];
+};
+
+type ChatTitle = {
+  success: true;
+  title: string;
+};
+type ClearChat = {
+  success: true;
+  message: string;
+};
+
+type UpcateChatTitle = {
+  success: false;
+  message: string;
 };
 
 type TranscriptionResponse =
@@ -119,4 +153,8 @@ export type {
   TranslationResponse,
   TTSResponse,
   TranscriptionResponseFull,
+  ChatHistoryResponse,
+  ChatTitle,
+  ClearChat,
+  UpcateChatTitle,
 };

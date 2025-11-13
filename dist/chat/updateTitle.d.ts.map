@@ -1,0 +1,1 @@
+{"version":3,"file":"updateTitle.d.ts","sourceRoot":"","sources":["../../src/chat/updateTitle.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,aAAa,EAAc,MAAM,OAAO,CAAC;AAWlD,MAAM,WAAW,mBAAmB;IAClC,OAAO,EAAE,OAAO,CAAC;IACjB,OAAO,CAAC,EAAE,MAAM,CAAC;CAClB;AAED,wBAAsB,WAAW,CAC/B,MAAM,EAAE,aAAa,EACrB,KAAK,EAAE,MAAM,GACZ,OAAO,CAAC,mBAAmB,CAAC,CAsF9B"}
