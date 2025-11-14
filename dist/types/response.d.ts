@@ -1,4 +1,3 @@
-import { LanguageEnum } from "../common/languageEnum.js";
 type ChatResponse = {
     success: boolean;
     message: {
@@ -143,8 +142,8 @@ type TranslationResponseOriginal = {
             id: number;
             source_text: string;
             translated_text: string;
-            source_language: LanguageEnum;
-            target_language: LanguageEnum;
+            source_language: Languages;
+            target_language: Languages;
             character_count: number;
             created_at: string;
         };
@@ -164,8 +163,8 @@ type TranslationResponseMapped = {
             id: number;
             source_text: string;
             translated_text: string;
-            source_language: LanguageEnum;
-            target_language: LanguageEnum;
+            source_language: Languages;
+            target_language: Languages;
             character_count: number;
             created_at: string;
         };
@@ -176,8 +175,8 @@ type TranslationHistoryItem = {
     user_id: string;
     device_id: null | string;
     source_text: string;
-    source_language: string;
-    target_language: string;
+    source_language: Languages;
+    target_language: Languages;
     translated_text: string;
     success: string;
     error_message: string | null;
@@ -210,12 +209,13 @@ type TTSAnalyticsResponse = {
     language_breakdown: LanguageBreakdown;
     daily_usage: DailyUsage[];
 };
+type Languages = "amh" | "orm" | "tir" | "eng" | "auto";
 type TTSHistoryRecord = {
     success: boolean;
     recors: {
         id: number;
         text: string;
-        language: string;
+        language: Languages;
         speaker_name: string;
         status: "success" | "failed";
         audio_url?: string;

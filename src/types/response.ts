@@ -1,5 +1,3 @@
-import { LanguageEnum } from "../common/languageEnum.js";
-
 type ChatResponse =
   | {
       success: boolean;
@@ -185,8 +183,8 @@ type TranslationResponseOriginal = {
       id: number;
       source_text: string;
       translated_text: string;
-      source_language: LanguageEnum;
-      target_language: LanguageEnum;
+      source_language: Languages;
+      target_language: Languages;
       character_count: number;
       created_at: string;
     };
@@ -207,8 +205,8 @@ type TranslationResponseMapped = {
       id: number;
       source_text: string;
       translated_text: string;
-      source_language: LanguageEnum;
-      target_language: LanguageEnum;
+      source_language: Languages;
+      target_language: Languages;
       character_count: number;
       created_at: string;
     };
@@ -220,8 +218,8 @@ type TranslationHistoryItem = {
   user_id: string;
   device_id: null | string;
   source_text: string;
-  source_language: string;
-  target_language: string;
+  source_language: Languages;
+  target_language: Languages;
   translated_text: string;
   success: string;
   error_message: string | null;
@@ -235,8 +233,6 @@ type TranslationHistoryLinks = {
   label: string;
   active: boolean;
 };
-
-// types/response.ts
 
 type LanguageBreakdown = {
   [language: string]: number;
@@ -261,12 +257,14 @@ type TTSAnalyticsResponse = {
   daily_usage: DailyUsage[];
 };
 
+type Languages = "amh" | "orm" | "tir" | "eng" | "auto";
+
 type TTSHistoryRecord = {
   success: boolean;
   recors: {
     id: number;
     text: string;
-    language: string;
+    language: Languages;
     speaker_name: string;
     status: "success" | "failed";
     audio_url?: string;
@@ -276,8 +274,6 @@ type TTSHistoryRecord = {
     device_id?: number;
   };
 };
-
-// types/response.ts
 
 type TTSRecord = {
   id: number;
@@ -334,8 +330,6 @@ type TTSResponse = {
   success: boolean;
   audio_buffer: ArrayBuffer | Uint8Array | string;
 };
-
-// types/response.ts
 
 type DeleteTTSRecordResponse = {
   success: boolean;

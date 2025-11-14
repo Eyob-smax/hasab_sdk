@@ -3,7 +3,6 @@ import { HasabError } from "./errors.js";
 export interface ChatStreamOptions {
     message: string;
     model?: string;
-    apikey: string;
     client: AxiosInstance;
     onData: StreamCallback;
     onError?: (err: HasabError) => void;

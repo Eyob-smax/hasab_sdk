@@ -270,9 +270,6 @@ export class HasabClient {
     }
 }
 const hasab = new HasabClient("HASAB_KEY_o64D9FHJz9f9TQ6by0828gfrrwOK5S");
-const analytics = await hasab.tts.getAnalytics({
-    date_from: "2024-01-01",
-    date_to: "2024-01-31",
-});
+const analytics = await hasab.tts.getAnalytics();
 console.log(analytics);
 //# sourceMappingURL=client.js.map
