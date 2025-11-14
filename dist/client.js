@@ -13,9 +13,35 @@ import { translate } from "./translation/translation.js";
 import { getTranslationHistory } from "./translation/translationHistory.js";
 import { tts } from "./TTS/textToSpeech.js";
 import { getSpeakers } from "./TTS/getSpeakers.js";
+import { getTTSHistory } from "./TTS/getHistory.js";
+import { getTTSAnalytics } from "./TTS/getAnalytics.js";
+import { getTTSRecord } from "./TTS/getRecord.js";
+import { deleteTTSRecord } from "./TTS/deletRecord.js";
+import { ttsStream } from "./TTS/textToSpeechStream.js";
+import { getTranscriptionHistory, } from "./transcription/getHistory.js";
 export class HasabClient {
     constructor(apikey) {
-        // === CHAT ===
+        // === TRANSCRIPTION ===
+        this.transcription = {
+            transcribe: async (file) => {
+                try {
+                    const result = await transcribe({ audio_file: file }, this.client);
+                    return result;
+                }
+                catch (error) {
+                    return this.handleError(error);
+                }
+            },
+            getHistory: async (options) => {
+                try {
+                    const result = await getTranscriptionHistory(this.apikey, this.client, options);
+                    return result;
+                }
+                catch (error) {
+                    return this.handleError(error);
+                }
+            },
+        };
         this.chat = {
             sendMessage: async (message, options) => {
                 try {
@@ -115,9 +141,68 @@ export class HasabClient {
                     return this.handleError(error);
                 }
             },
+            streamResponse: (request) => {
+                const stream = new Readable({ read() { } });
+                let cancelFn = () => { };
+                const startStream = async () => {
+                    try {
+                        const cancel = await ttsStream(request, this.client, (chunk) => stream.push(chunk), (err) => stream.emit("error", err), () => stream.push(null));
+                        cancelFn = cancel;
+                        stream.cancel = () => {
+                            cancel();
+                            stream.push(null);
+                            stream.emit("close");
+                        };
+                    }
+                    catch (err) {
+                        stream.emit("error", err);
+                        stream.push(null);
+                    }
+                };
+                startStream();
+                const originalDestroy = stream.destroy.bind(stream);
+                stream.destroy = function (error) {
+                    cancelFn();
+                    originalDestroy.call(this, error);
+                    return this;
+                };
+                return stream;
+            },
             getSpeakers: async (language) => {
                 try {
                     return await getSpeakers(this.client, language);
+                }
+                catch (error) {
+                    return this.handleError(error);
+                }
+            },
+            getHistory: async (options) => {
+                try {
+                    return await getTTSHistory(this.client, options);
+                }
+                catch (error) {
+                    return this.handleError(error);
+                }
+            },
+            getAnalytics: async (options) => {
+                try {
+                    return await getTTSAnalytics(this.client, options);
+                }
+                catch (error) {
+                    return this.handleError(error);
+                }
+            },
+            getRecord: async (recordId) => {
+                try {
+                    return await getTTSRecord(this.client, recordId);
+                }
+                catch (error) {
+                    return this.handleError(error);
+                }
+            },
+            deleteRecord: async (recordId) => {
+                try {
+                    return await deleteTTSRecord(this.client, recordId);
                 }
                 catch (error) {
                     return this.handleError(error);
@@ -176,16 +261,6 @@ export class HasabClient {
             }
         });
     }
-    // === TRANSCRIPTION ===
-    async transcribe(file) {
-        try {
-            const result = await transcribe({ audio_file: file }, this.client);
-            return result;
-        }
-        catch (error) {
-            return this.handleError(error);
-        }
-    }
     handleError(error) {
         if (error instanceof HasabError) {
             return { success: false, message: `[${error.code}] ${error.message}` };
@@ -195,6 +270,9 @@ export class HasabClient {
     }
 }
 const hasab = new HasabClient("HASAB_KEY_o64D9FHJz9f9TQ6by0828gfrrwOK5S");
-const speakers = await hasab.tts.getSpeakers("amh");
-console.log(speakers);
+const analytics = await hasab.tts.getAnalytics({
+    date_from: "2024-01-01",
+    date_to: "2024-01-31",
+});
+console.log(analytics);
 //# sourceMappingURL=client.js.map

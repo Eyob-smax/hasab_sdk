@@ -1,15 +1,20 @@
 import axios, { AxiosInstance, AxiosError } from "axios";
 import { transcribe } from "./transcription/transcription.js";
-import fs from "fs";
+// import fs from "fs/promises";
 import type {
   ChatHistoryResponse,
   ChatResponse,
   ChatTitle,
   ClearChat,
+  DeleteTTSRecordResponse,
+  GetTTSRecordResponse,
   SpeakersResponse,
+  TranscriptionHistoryResponse,
   TranscriptionResponseFull,
   TranslationHistoryResponse,
   TranslationResponseMapped,
+  TTSAnalyticsResponse,
+  TTSHistoryResponse,
   TTSResponse,
 } from "./types/response.js";
 import {
@@ -36,6 +41,15 @@ import { LanguageEnum } from "./common/languageEnum.js";
 import { getTranslationHistory } from "./translation/translationHistory.js";
 import { tts } from "./TTS/textToSpeech.js";
 import { getSpeakers } from "./TTS/getSpeakers.js";
+import { getTTSHistory, GetTTSHistoryOptions } from "./TTS/getHistory.js";
+import { getTTSAnalytics, GetTTSAnalyticsOptions } from "./TTS/getAnalytics.js";
+import { getTTSRecord } from "./TTS/getRecord.js";
+import { deleteTTSRecord } from "./TTS/deletRecord.js";
+import { ttsStream, TTSStreamRequest } from "./TTS/textToSpeechStream.js";
+import {
+  getTranscriptionHistory,
+  GetTranscriptionHistoryOptions,
+} from "./transcription/getHistory.js";
 
 // Unified error response for failed operations
 type ErrorResponse = { success: false; message: string };
@@ -115,18 +129,35 @@ export class HasabClient {
   }
 
   // === TRANSCRIPTION ===
-  public async transcribe(
-    file: File | Blob | string
-  ): Promise<TranscriptionResponseFull | ErrorResponse> {
-    try {
-      const result = await transcribe({ audio_file: file }, this.client);
-      return result;
-    } catch (error: unknown) {
-      return this.handleError(error);
-    }
-  }
+  public transcription = {
+    transcribe: async (
+      file: File | Blob | string
+    ): Promise<TranscriptionResponseFull | ErrorResponse> => {
+      try {
+        const result = await transcribe({ audio_file: file }, this.client);
+        return result;
+      } catch (error: unknown) {
+        return this.handleError(error);
+      }
+    },
+    getHistory: async (
+      options?: GetTranscriptionHistoryOptions
+    ): Promise<
+      TranscriptionHistoryResponse | { success: false; message: string }
+    > => {
+      try {
+        const result = await getTranscriptionHistory(
+          this.apikey,
+          this.client,
+          options
+        );
+        return result;
+      } catch (error: unknown) {
+        return this.handleError(error);
+      }
+    },
+  };
 
-  // === CHAT ===
   public chat = {
     sendMessage: async (
       message: string,
@@ -264,11 +295,93 @@ export class HasabClient {
       }
     },
 
+    streamResponse: (
+      request: TTSStreamRequest
+    ): Readable & { cancel: () => void } => {
+      const stream = new Readable({ read() {} }) as Readable & {
+        cancel: () => void;
+      };
+      let cancelFn: () => void = () => {};
+
+      const startStream = async () => {
+        try {
+          const cancel = await ttsStream(
+            request,
+            this.client,
+            (chunk: Buffer) => stream.push(chunk),
+            (err: any) => stream.emit("error", err),
+            () => stream.push(null)
+          );
+
+          cancelFn = cancel;
+          stream.cancel = () => {
+            cancel();
+            stream.push(null);
+            stream.emit("close");
+          };
+        } catch (err: unknown) {
+          stream.emit("error", err);
+          stream.push(null);
+        }
+      };
+
+      startStream();
+
+      const originalDestroy = stream.destroy.bind(stream);
+      stream.destroy = function (this: typeof stream, error?: Error) {
+        cancelFn();
+        originalDestroy.call(this, error);
+        return this;
+      };
+
+      return stream;
+    },
+
     getSpeakers: async (
       language?: string
     ): Promise<SpeakersResponse | { success: false; message: string }> => {
       try {
         return await getSpeakers(this.client, language);
+      } catch (error: unknown) {
+        return this.handleError(error);
+      }
+    },
+    getHistory: async (
+      options?: GetTTSHistoryOptions
+    ): Promise<TTSHistoryResponse | { success: false; message: string }> => {
+      try {
+        return await getTTSHistory(this.client, options);
+      } catch (error: unknown) {
+        return this.handleError(error);
+      }
+    },
+    getAnalytics: async (
+      options?: GetTTSAnalyticsOptions
+    ): Promise<TTSAnalyticsResponse | { success: false; message: string }> => {
+      try {
+        return await getTTSAnalytics(this.client, options);
+      } catch (error: unknown) {
+        return this.handleError(error);
+      }
+    },
+
+    getRecord: async (
+      recordId: number
+    ): Promise<GetTTSRecordResponse | { success: false; message: string }> => {
+      try {
+        return await getTTSRecord(this.client, recordId);
+      } catch (error: unknown) {
+        return this.handleError(error);
+      }
+    },
+
+    deleteRecord: async (
+      recordId: number
+    ): Promise<
+      DeleteTTSRecordResponse | { success: false; message: string }
+    > => {
+      try {
+        return await deleteTTSRecord(this.client, recordId);
       } catch (error: unknown) {
         return this.handleError(error);
       }
@@ -287,6 +400,8 @@ export class HasabClient {
 
 const hasab = new HasabClient("HASAB_KEY_o64D9FHJz9f9TQ6by0828gfrrwOK5S");
 
-const speakers = await hasab.tts.getSpeakers("amh");
-
-console.log(speakers);
+const analytics = await hasab.tts.getAnalytics({
+  date_from: "2024-01-01",
+  date_to: "2024-01-31",
+});
+console.log(analytics);

@@ -53,6 +53,8 @@ export async function tts(
       },
     });
 
+    console.log(response.data);
+
     const data = response.data;
     if (!data) {
       throw new HasabApiError(

@@ -96,6 +96,61 @@ type TranscriptionResponseFull = {
   timestamp: any[];
 };
 
+type TranscriptionJobUser = {
+  id: number;
+  name: string;
+  email: string;
+};
+
+type TranscriptionJob = {
+  id: number;
+  user_id: string;
+  device_id: number | null;
+  filename: string;
+  original_filename: string;
+  mime_type: string;
+  duration_in_seconds: string;
+  file_size: string;
+  path: string;
+  subtitle_path: string | null;
+  description: string | null;
+  transcription: string;
+  translation: string;
+  summary: string;
+  audio_type: string;
+  is_meeting: string;
+  created_at: string;
+  updated_at: string;
+  tokens_used: string;
+  user: TranscriptionJobUser;
+};
+
+type TranscriptionHistoryData = {
+  current_page: number;
+  data: TranscriptionJob[];
+  first_page_url: string;
+  from: number | null;
+  last_page: number;
+  last_page_url: string;
+  links: Array<{
+    url: string | null;
+    label: string;
+    active: boolean;
+  }>;
+  next_page_url: string | null;
+  path: string;
+  per_page: number;
+  prev_page_url: string | null;
+  to: number | null;
+  total: number;
+};
+
+type TranscriptionHistoryResponse = {
+  status: "success" | "error";
+  data: TranscriptionHistoryData;
+  message?: string;
+};
+
 // interface TranslationDataItem {
 //   id: number;
 //   user_id: string;
@@ -181,6 +236,77 @@ type TranslationHistoryLinks = {
   active: boolean;
 };
 
+// types/response.ts
+
+type LanguageBreakdown = {
+  [language: string]: number;
+};
+
+type DailyUsage = {
+  date: string;
+  requests: number;
+  tokens_used: number;
+};
+
+type TTSAnalyticsResponse = {
+  success: boolean;
+  overview: {
+    total_requests: number;
+    successful_requests: number;
+    failed_requests: number;
+    total_tokens_used: number;
+    avg_tokens_per_request: number;
+  };
+  language_breakdown: LanguageBreakdown;
+  daily_usage: DailyUsage[];
+};
+
+type TTSHistoryRecord = {
+  success: boolean;
+  recors: {
+    id: number;
+    text: string;
+    language: string;
+    speaker_name: string;
+    status: "success" | "failed";
+    audio_url?: string;
+    tokens_used: number;
+    created_at: string;
+    tts_type?: "regular" | "reference";
+    device_id?: number;
+  };
+};
+
+// types/response.ts
+
+type TTSRecord = {
+  id: number;
+  text: string;
+  language: string;
+  speaker_name: string;
+  status: "success" | "failed";
+  audio_url?: string;
+  tokens_used: number;
+  created_at: string;
+  tts_type?: "regular" | "reference";
+  device_id?: number;
+};
+
+type GetTTSRecordResponse = {
+  success: boolean;
+  record: TTSRecord;
+  message?: string;
+};
+
+type TTSHistoryResponse = {
+  success: boolean;
+  records: TTSHistoryRecord[];
+  total: number;
+  limit: number;
+  offset: number;
+  message?: string;
+};
+
 type TranslationHistory = {
   status: "success";
   data: {
@@ -209,6 +335,13 @@ type TTSResponse = {
   audio_buffer: ArrayBuffer | Uint8Array | string;
 };
 
+// types/response.ts
+
+type DeleteTTSRecordResponse = {
+  success: boolean;
+  message?: string;
+};
+
 type TranslationHistoryResponse = {
   success: boolean;
   history: TranslationHistory;
@@ -218,6 +351,12 @@ type SpeakersResponse = {
   success: boolean;
   languages: Record<string, string[]>;
   total_speakers: number;
+  message?: string;
+};
+type TTSStreamStartResponse = {
+  success: boolean;
+  session_id: string;
+  status: "started" | "failed";
   message?: string;
 };
 
@@ -235,4 +374,12 @@ export type {
   TranslationHistory,
   TranslationHistoryResponse,
   SpeakersResponse,
+  TTSHistoryResponse,
+  TTSHistoryRecord,
+  TTSAnalyticsResponse,
+  DailyUsage,
+  GetTTSRecordResponse,
+  DeleteTTSRecordResponse,
+  TTSStreamStartResponse,
+  TranscriptionHistoryResponse,
 };

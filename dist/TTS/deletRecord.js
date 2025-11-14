@@ -1,42 +1,28 @@
 import { AxiosError } from "axios";
 import { HasabApiError, HasabNetworkError, HasabValidationError, HasabAuthError, HasabRateLimitError, HasabTimeoutError, HasabUnknownError, } from "../common/errors.js";
-export async function getSpeakers(client, language) {
-    if (language !== undefined &&
-        (typeof language !== "string" || language.trim() === "")) {
-        throw new HasabValidationError("Language filter must be a non-empty string if provided.");
-    }
-    const params = {};
-    if (language) {
-        params.language = language.trim().toLowerCase();
+export async function deleteTTSRecord(client, recordId) {
+    if (!Number.isInteger(recordId) || recordId <= 0) {
+        throw new HasabValidationError("recordId must be a positive integer.");
     }
     try {
-        const response = await client.get("/tts/speakers", {
-            params,
+        const response = await client.delete(`/tts/record/${recordId}`, {
             headers: {
+                "Content-Type": "application/json",
                 Accept: "application/json",
             },
         });
         const data = response.data;
         if (!data || typeof data !== "object") {
-            throw new HasabApiError("Invalid response format from server", 500);
-        }
-        for (const [lang, speakers] of Object.entries(data.languages)) {
-            if (!Array.isArray(speakers) ||
-                speakers.some((s) => typeof s !== "string")) {
-                throw new HasabApiError(`Invalid speakers list for language '${lang}'`, 500);
-            }
+            throw new HasabApiError("Invalid response format", 500);
         }
         return {
             success: true,
-            languages: data.languages,
-            total_speakers: data.total_speakers,
-            message: data.message || "Speakers retrieved successfully",
+            message: data.message || "TTS record deleted successfully",
         };
     }
     catch (error) {
-        if (error instanceof HasabValidationError) {
+        if (error instanceof HasabValidationError)
             throw error;
-        }
         if (error instanceof AxiosError) {
             const axiosErr = error;
             if (axiosErr.response) {
@@ -47,9 +33,9 @@ export async function getSpeakers(client, language) {
                         throw new HasabValidationError(`Bad request: ${msg}`);
                     case 401:
                     case 403:
-                        throw new HasabAuthError("Unauthorized: Invalid or missing API key");
+                        throw new HasabAuthError("Unauthorized: Invalid API key");
                     case 404:
-                        throw new HasabApiError("TTS speakers endpoint not found", 404);
+                        throw new HasabApiError(`TTS record ${recordId} not found`, 404);
                     case 408:
                         throw new HasabTimeoutError("Request timed out");
                     case 429:
@@ -65,7 +51,7 @@ export async function getSpeakers(client, language) {
                 }
             }
             if (axiosErr.request) {
-                throw new HasabNetworkError("No response from server. Check your connection.");
+                throw new HasabNetworkError("No response from server.");
             }
             if (axiosErr.code === "ECONNABORTED") {
                 throw new HasabTimeoutError("Request timeout exceeded");
@@ -73,7 +59,7 @@ export async function getSpeakers(client, language) {
             throw new HasabUnknownError(axiosErr.message);
         }
         const msg = error instanceof Error ? error.message : "Unknown error";
-        throw new HasabUnknownError(`Unexpected error fetching speakers: ${msg}`);
+        throw new HasabUnknownError(`Failed to delete TTS record ${recordId}: ${msg}`);
     }
 }
-//# sourceMappingURL=getSpeakers.js.map
+//# sourceMappingURL=deletRecord.js.map

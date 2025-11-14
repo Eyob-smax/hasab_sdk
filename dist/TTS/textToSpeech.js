@@ -27,6 +27,7 @@ export async function tts(text, language, speaker_name, client) {
                 Accept: "application/json",
             },
         });
+        console.log(response.data);
         const data = response.data;
         if (!data) {
             throw new HasabApiError("Invalid response from server, no data received", 500);
