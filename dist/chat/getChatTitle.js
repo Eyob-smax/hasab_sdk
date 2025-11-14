@@ -2,11 +2,7 @@ import { AxiosError } from "axios";
 import { HasabApiError, HasabNetworkError, HasabValidationError, HasabAuthError, HasabRateLimitError, HasabTimeoutError, HasabUnknownError, } from "../common/errors.js";
 export async function getChatTitle(client) {
     try {
-        const response = await client.get("/chat/title", {
-            headers: {
-                "Content-Type": "application/json",
-            },
-        });
+        const response = await client.get("/chat/title");
         const data = response.data;
         if (!data || typeof data !== "object") {
             throw new HasabApiError("Invalid response format from server", 500);

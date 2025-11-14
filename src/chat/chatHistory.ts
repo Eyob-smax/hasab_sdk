@@ -12,16 +12,13 @@ import {
 import { AxiosError } from "axios";
 
 export async function getChatHistory(
-  apikey: string,
   client: AxiosInstance
 ): Promise<ChatHistoryResponse> {
   try {
     const response = await client.get("/chat/history", {
       headers: {
-        Authorization: `Bearer ${apikey}`,
         "Content-Type": "application/json",
       },
-      timeout: 15000,
     });
 
     const data = response.data;

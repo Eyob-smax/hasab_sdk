@@ -1,13 +1,11 @@
 import { HasabApiError, HasabNetworkError, HasabValidationError, HasabAuthError, HasabRateLimitError, HasabTimeoutError, HasabUnknownError, } from "../common/errors.js";
 import { AxiosError } from "axios";
-export async function getChatHistory(apikey, client) {
+export async function getChatHistory(client) {
     try {
         const response = await client.get("/chat/history", {
             headers: {
-                Authorization: `Bearer ${apikey}`,
                 "Content-Type": "application/json",
             },
-            timeout: 15000,
         });
         const data = response.data;
         if (!data || typeof data !== "object") {

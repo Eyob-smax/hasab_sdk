@@ -1,7 +1,7 @@
 export enum LanguageEnum {
   AUTO = "auto",
-  AMHARIC = "am",
-  ENGLISH = "en",
-  OROMIGNA = "om",
-  TIGRIGNA = "ti",
+  AMHARIC = "amh",
+  ENGLISH = "eng",
+  OROMIGNA = "orm",
+  TIGRIGNA = "tir",
 }

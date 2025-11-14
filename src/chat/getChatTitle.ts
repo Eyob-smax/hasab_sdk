@@ -12,12 +12,7 @@ import { ChatTitle } from "../types/response.js";
 
 export async function getChatTitle(client: AxiosInstance): Promise<ChatTitle> {
   try {
-    const response = await client.get("/chat/title", {
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-
+    const response = await client.get("/chat/title");
     const data = response.data;
 
     if (!data || typeof data !== "object") {

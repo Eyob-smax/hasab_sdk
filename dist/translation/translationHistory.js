@@ -1,29 +1,20 @@
 import { AxiosError } from "axios";
 import { HasabApiError, HasabNetworkError, HasabValidationError, HasabAuthError, HasabRateLimitError, HasabTimeoutError, HasabUnknownError, } from "../common/errors.js";
-export async function updateTitle(client, title) {
-    if (!title || typeof title !== "string") {
-        throw new HasabValidationError("Title is required and must be a string");
-    }
-    const trimmedTitle = title.trim();
-    if (trimmedTitle.length === 0) {
-        throw new HasabValidationError("Title cannot be empty");
-    }
-    if (trimmedTitle.length > 255) {
-        throw new HasabValidationError("Title must not exceed 255 characters");
-    }
+export async function getTranslationHistory(client) {
     try {
-        const response = await client.post("/chat/title", { title: trimmedTitle }, {
+        const response = await client.get("/translations", {
             headers: {
                 "Content-Type": "application/json",
+                Accept: "application/json",
             },
         });
         const data = response.data;
         if (!data || typeof data !== "object") {
-            throw new HasabApiError("Invalid response from server", 500);
+            throw new HasabApiError("Invalid response format from server", 500);
         }
         return {
             success: true,
-            message: data.message || "Chat title updated successfully",
+            history: data,
         };
     }
     catch (error) {
@@ -34,12 +25,12 @@ export async function updateTitle(client, title) {
                 const msg = axiosErr.response.data?.message || "API error";
                 switch (status) {
                     case 400:
-                        throw new HasabValidationError(`Invalid title: ${msg}`);
+                        throw new HasabValidationError(`Bad request: ${msg}`);
                     case 401:
                     case 403:
                         throw new HasabAuthError("Unauthorized: Invalid or missing API key");
                     case 404:
-                        throw new HasabApiError("Chat title endpoint not found", 404);
+                        throw new HasabApiError("Translation history endpoint not found", 404);
                     case 408:
                         throw new HasabTimeoutError("Request timed out");
                     case 429:
@@ -66,4 +57,4 @@ export async function updateTitle(client, title) {
         throw new HasabUnknownError(`Unexpected error: ${msg}`);
     }
 }
-//# sourceMappingURL=updateTitle.js.map
+//# sourceMappingURL=translationHistory.js.map

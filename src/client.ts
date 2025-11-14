@@ -1,10 +1,16 @@
 import axios, { AxiosInstance, AxiosError } from "axios";
 import { transcribe } from "./transcription/transcription.js";
+import fs from "fs";
 import type {
   ChatHistoryResponse,
   ChatResponse,
   ChatTitle,
-  TranscriptionResponse,
+  ClearChat,
+  SpeakersResponse,
+  TranscriptionResponseFull,
+  TranslationHistoryResponse,
+  TranslationResponseMapped,
+  TTSResponse,
 } from "./types/response.js";
 import {
   HasabError,
@@ -24,21 +30,30 @@ import { Readable } from "stream";
 import { getChatHistory } from "./chat/chatHistory.js";
 import { getChatTitle } from "./chat/getChatTitle.js";
 import { clearChat } from "./chat/clearChat.js";
-import { updateTitle } from "./chat/updateTitle.js";
-import { log } from "console";
+import { updateTitle, UpdateTitleResponse } from "./chat/updateTitle.js";
+import { translate } from "./translation/translation.js";
+import { LanguageEnum } from "./common/languageEnum.js";
+import { getTranslationHistory } from "./translation/translationHistory.js";
+import { tts } from "./TTS/textToSpeech.js";
+import { getSpeakers } from "./TTS/getSpeakers.js";
+
+// Unified error response for failed operations
+type ErrorResponse = { success: false; message: string };
 
 export class HasabClient {
   private apikey: string;
   private client: AxiosInstance;
 
   constructor(apikey: string) {
-    if (!apikey) throw new HasabAuthError("API key is required.");
+    if (!apikey || typeof apikey !== "string") {
+      throw new HasabAuthError("API key is required and must be a string.");
+    }
     this.apikey = apikey;
 
     this.client = axios.create({
       baseURL: BASE_URL,
       headers: { Authorization: `Bearer ${apikey}` },
-      timeout: 50000,
+      timeout: 60000,
     });
 
     this.initializeInterceptors();
@@ -58,12 +73,11 @@ export class HasabClient {
       (error: AxiosError) => {
         if (error.response) {
           const status = error.response.status;
+          const data = error.response.data as any;
 
           switch (status) {
             case 400:
-              throw new HasabValidationError(
-                (error.response.data as any)?.message || "Bad request"
-              );
+              throw new HasabValidationError(data?.message || "Bad request");
             case 401:
             case 403:
               throw new HasabAuthError("Unauthorized or invalid API key.");
@@ -80,19 +94,12 @@ export class HasabClient {
             case 502:
             case 503:
             case 504:
-              console.error("Endpoint not found:", error.response.data);
-
               throw new HasabApiError(
                 "Server error. Please retry later.",
                 status
               );
             default:
-              console.error("Endpoint not found:", error.response.data);
-
-              throw new HasabApiError(
-                (error.response.data as any)?.message || "API Error",
-                status
-              );
+              throw new HasabApiError(data?.message || "API Error", status);
           }
         } else if (error.request) {
           throw new HasabNetworkError(
@@ -107,55 +114,39 @@ export class HasabClient {
     );
   }
 
-  async transcribe(file: File | Blob | string): Promise<TranscriptionResponse> {
+  // === TRANSCRIPTION ===
+  public async transcribe(
+    file: File | Blob | string
+  ): Promise<TranscriptionResponseFull | ErrorResponse> {
     try {
-      const result = await transcribe(
-        { audio_file: file },
-        this.apikey,
-        this.client
-      );
+      const result = await transcribe({ audio_file: file }, this.client);
       return result;
-    } catch (error: any) {
-      if (error instanceof HasabError) {
-        return { success: false, message: `[${error.code}] ${error.message}` };
-      }
-      return {
-        success: false,
-        message: "Unexpected error: " + (error?.message || "Unknown issue"),
-      };
+    } catch (error: unknown) {
+      return this.handleError(error);
     }
   }
 
+  // === CHAT ===
   public chat = {
     sendMessage: async (
       message: string,
       options?: ChatOptionsConfig
-    ): Promise<ChatResponse> => {
+    ): Promise<ChatResponse | ErrorResponse> => {
       try {
         const result = await chat(message, this.client, options);
         return result;
-      } catch (error: any) {
-        console.error("Chat error:", error);
-        if (error instanceof HasabError) {
-          return {
-            success: false,
-            message: `[${error.code}] ${error.message}`,
-          };
-        }
-        return {
-          success: false,
-          message: "Unexpected error: " + (error?.message || "Unknown issue"),
-        };
+      } catch (error: unknown) {
+        return this.handleError(error);
       }
     },
+
     streamResponse: (
       message: string,
       options?: ChatOptionsConfig
     ): Readable & { cancel: () => void } => {
-      const stream = new Readable({
-        read() {},
-      }) as Readable & { cancel: () => void };
-
+      const stream = new Readable({ read() {} }) as Readable & {
+        cancel: () => void;
+      };
       let cancelFn: () => void = () => {};
 
       const startStream = async () => {
@@ -166,27 +157,19 @@ export class HasabClient {
           const cancel = await chatStream(
             message,
             this.client,
-            (chunk: string) => {
-              console.log("Received chunk:", chunk);
-              stream.push(chunk);
-            },
-            (err: any) => {
-              stream.emit("error", err);
-            },
-            () => {
-              stream.push(null);
-            },
+            (chunk: string) => stream.push(chunk),
+            (err: any) => stream.emit("error", err),
+            () => stream.push(null),
             { model, maxTokens, tools, temperature, timeout }
           );
 
           cancelFn = cancel;
-
           stream.cancel = () => {
             cancel();
             stream.push(null);
             stream.emit("close");
           };
-        } catch (err: any) {
+        } catch (err: unknown) {
           stream.emit("error", err);
           stream.push(null);
         }
@@ -203,70 +186,107 @@ export class HasabClient {
 
       return stream;
     },
-    getChatHistory: async (): Promise<ChatHistoryResponse> => {
+
+    getChatHistory: async (): Promise<ChatHistoryResponse | ErrorResponse> => {
       try {
-        const result = await getChatHistory(this.apikey, this.client);
-        return result;
-      } catch (err) {
-        return {
-          success: false,
-          message: (err as Error).message,
-        };
+        return await getChatHistory(this.client);
+      } catch (error: unknown) {
+        return this.handleError(error);
       }
     },
 
-    getChatTitle: async (): Promise<
-      ChatTitle | { success: boolean; message: string }
-    > => {
+    getChatTitle: async (): Promise<ChatTitle | ErrorResponse> => {
       try {
-        const result = await getChatTitle(this.client);
-        return result;
-      } catch (error) {
-        return {
-          success: false,
-          message: (error as Error).message,
-        };
+        return await getChatTitle(this.client);
+      } catch (error: unknown) {
+        return this.handleError(error);
       }
     },
-    clearChat: async () => {
+
+    clearChat: async (): Promise<ClearChat | ErrorResponse> => {
       try {
-        const result = await clearChat(this.client);
-        return result;
-      } catch (error) {
-        return {
-          success: false,
-          message: (error as Error).message,
-        };
+        return await clearChat(this.client);
+      } catch (error: unknown) {
+        return this.handleError(error);
       }
     },
-    updateTitle: async (title: string) => {
+
+    updateTitle: async (
+      title: string
+    ): Promise<UpdateTitleResponse | ErrorResponse> => {
       try {
-        const result = await updateTitle(this.client, title);
-        return result;
-      } catch (error) {
-        return {
-          success: false,
-          message: (error as Error).message,
-        };
+        return await updateTitle(this.client, title);
+      } catch (error: unknown) {
+        return this.handleError(error);
       }
     },
   };
+
+  public translate = {
+    translateText: async (
+      text: string,
+      targetLanguage: LanguageEnum,
+      sourceLanguage?: LanguageEnum
+    ): Promise<TranslationResponseMapped | ErrorResponse> => {
+      try {
+        return await translate(
+          text,
+          this.client,
+          targetLanguage,
+          sourceLanguage
+        );
+      } catch (error: unknown) {
+        return this.handleError(error);
+      }
+    },
+    getHistory: async (): Promise<
+      TranslationHistoryResponse | ErrorResponse
+    > => {
+      try {
+        const result = await getTranslationHistory(this.client);
+        return result;
+      } catch (error: unknown) {
+        return this.handleError(error);
+      }
+    },
+  };
+
+  public tts = {
+    synthesize: async (
+      text: string,
+      language: LanguageEnum,
+      speaker_name?: string
+    ): Promise<TTSResponse | ErrorResponse> => {
+      try {
+        return await tts(text, language, speaker_name, this.client);
+      } catch (error: unknown) {
+        return this.handleError(error);
+      }
+    },
+
+    getSpeakers: async (
+      language?: string
+    ): Promise<SpeakersResponse | { success: false; message: string }> => {
+      try {
+        return await getSpeakers(this.client, language);
+      } catch (error: unknown) {
+        return this.handleError(error);
+      }
+    },
+  };
+
+  private handleError(error: unknown): ErrorResponse {
+    if (error instanceof HasabError) {
+      return { success: false, message: `[${error.code}] ${error.message}` };
+    }
+    const message =
+      error instanceof Error ? error.message : "Unknown error occurred";
+    return { success: false, message };
+  }
 }
 
 const hasab = new HasabClient("HASAB_KEY_o64D9FHJz9f9TQ6by0828gfrrwOK5S");
 
-// hasab.chat
-//   .streamResponse("Hello, can you tell me a joke?")
-//   .on("data", (chunk) => {
-//     console.log(chunk);
-//     process.stdout.write(chunk);
-//   })
-//   .on("error", (err) => {
-//     console.error("Stream error:", err);
-//   })
-//   .on("end", () => {
-//     console.log("\nStream ended.");
-//   });
+const speakers = await hasab.tts.getSpeakers("amh");
 
-const chatHistory = await hasab.chat.getChatTitle();
-log(chatHistory);
+console.log(speakers);

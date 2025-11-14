@@ -9,9 +9,13 @@ import { getChatHistory } from "./chat/chatHistory.js";
 import { getChatTitle } from "./chat/getChatTitle.js";
 import { clearChat } from "./chat/clearChat.js";
 import { updateTitle } from "./chat/updateTitle.js";
-import { log } from "console";
+import { translate } from "./translation/translation.js";
+import { getTranslationHistory } from "./translation/translationHistory.js";
+import { tts } from "./TTS/textToSpeech.js";
+import { getSpeakers } from "./TTS/getSpeakers.js";
 export class HasabClient {
     constructor(apikey) {
+        // === CHAT ===
         this.chat = {
             sendMessage: async (message, options) => {
                 try {
@@ -19,35 +23,16 @@ export class HasabClient {
                     return result;
                 }
                 catch (error) {
-                    console.error("Chat error:", error);
-                    if (error instanceof HasabError) {
-                        return {
-                            success: false,
-                            message: `[${error.code}] ${error.message}`,
-                        };
-                    }
-                    return {
-                        success: false,
-                        message: "Unexpected error: " + (error?.message || "Unknown issue"),
-                    };
+                    return this.handleError(error);
                 }
             },
             streamResponse: (message, options) => {
-                const stream = new Readable({
-                    read() { },
-                });
+                const stream = new Readable({ read() { } });
                 let cancelFn = () => { };
                 const startStream = async () => {
                     try {
                         const { model, maxTokens, tools, temperature, timeout } = options || {};
-                        const cancel = await chatStream(message, this.client, (chunk) => {
-                            console.log("Received chunk:", chunk);
-                            stream.push(chunk);
-                        }, (err) => {
-                            stream.emit("error", err);
-                        }, () => {
-                            stream.push(null);
-                        }, { model, maxTokens, tools, temperature, timeout });
+                        const cancel = await chatStream(message, this.client, (chunk) => stream.push(chunk), (err) => stream.emit("error", err), () => stream.push(null), { model, maxTokens, tools, temperature, timeout });
                         cancelFn = cancel;
                         stream.cancel = () => {
                             cancel();
@@ -71,60 +56,82 @@ export class HasabClient {
             },
             getChatHistory: async () => {
                 try {
-                    const result = await getChatHistory(this.apikey, this.client);
-                    return result;
+                    return await getChatHistory(this.client);
                 }
-                catch (err) {
-                    return {
-                        success: false,
-                        message: err.message,
-                    };
+                catch (error) {
+                    return this.handleError(error);
                 }
             },
             getChatTitle: async () => {
                 try {
-                    const result = await getChatTitle(this.client);
-                    return result;
+                    return await getChatTitle(this.client);
                 }
                 catch (error) {
-                    return {
-                        success: false,
-                        message: error.message,
-                    };
+                    return this.handleError(error);
                 }
             },
             clearChat: async () => {
                 try {
-                    const result = await clearChat(this.client);
-                    return result;
+                    return await clearChat(this.client);
                 }
                 catch (error) {
-                    return {
-                        success: false,
-                        message: error.message,
-                    };
+                    return this.handleError(error);
                 }
             },
             updateTitle: async (title) => {
                 try {
-                    const result = await updateTitle(this.client, title);
-                    return result;
+                    return await updateTitle(this.client, title);
                 }
                 catch (error) {
-                    return {
-                        success: false,
-                        message: error.message,
-                    };
+                    return this.handleError(error);
                 }
             },
         };
-        if (!apikey)
-            throw new HasabAuthError("API key is required.");
+        this.translate = {
+            translateText: async (text, targetLanguage, sourceLanguage) => {
+                try {
+                    return await translate(text, this.client, targetLanguage, sourceLanguage);
+                }
+                catch (error) {
+                    return this.handleError(error);
+                }
+            },
+            getHistory: async () => {
+                try {
+                    const result = await getTranslationHistory(this.client);
+                    return result;
+                }
+                catch (error) {
+                    return this.handleError(error);
+                }
+            },
+        };
+        this.tts = {
+            synthesize: async (text, language, speaker_name) => {
+                try {
+                    return await tts(text, language, speaker_name, this.client);
+                }
+                catch (error) {
+                    return this.handleError(error);
+                }
+            },
+            getSpeakers: async (language) => {
+                try {
+                    return await getSpeakers(this.client, language);
+                }
+                catch (error) {
+                    return this.handleError(error);
+                }
+            },
+        };
+        if (!apikey || typeof apikey !== "string") {
+            throw new HasabAuthError("API key is required and must be a string.");
+        }
         this.apikey = apikey;
         this.client = axios.create({
             baseURL: BASE_URL,
             headers: { Authorization: `Bearer ${apikey}` },
-            timeout: 50000,
+            timeout: 60000,
         });
         this.initializeInterceptors();
     }
@@ -136,9 +143,10 @@ export class HasabClient {
         this.client.interceptors.response.use((response) => response, (error) => {
             if (error.response) {
                 const status = error.response.status;
+                const data = error.response.data;
                 switch (status) {
                     case 400:
-                        throw new HasabValidationError(error.response.data?.message || "Bad request");
+                        throw new HasabValidationError(data?.message || "Bad request");
                     case 401:
                     case 403:
                         throw new HasabAuthError("Unauthorized or invalid API key.");
@@ -152,11 +160,9 @@ export class HasabClient {
                     case 502:
                     case 503:
                     case 504:
-                        console.error("Endpoint not found:", error.response.data);
                         throw new HasabApiError("Server error. Please retry later.", status);
                     default:
-                        console.error("Endpoint not found:", error.response.data);
-                        throw new HasabApiError(error.response.data?.message || "API Error", status);
+                        throw new HasabApiError(data?.message || "API Error", status);
                 }
             }
             else if (error.request) {
@@ -170,35 +176,25 @@ export class HasabClient {
             }
         });
     }
+    // === TRANSCRIPTION ===
     async transcribe(file) {
         try {
-            const result = await transcribe({ audio_file: file }, this.apikey, this.client);
+            const result = await transcribe({ audio_file: file }, this.client);
             return result;
         }
         catch (error) {
-            if (error instanceof HasabError) {
-                return { success: false, message: `[${error.code}] ${error.message}` };
-            }
-            return {
-                success: false,
-                message: "Unexpected error: " + (error?.message || "Unknown issue"),
-            };
+            return this.handleError(error);
         }
+    }
+    handleError(error) {
+        if (error instanceof HasabError) {
+            return { success: false, message: `[${error.code}] ${error.message}` };
+        }
+        const message = error instanceof Error ? error.message : "Unknown error occurred";
+        return { success: false, message };
     }
 }
 const hasab = new HasabClient("HASAB_KEY_o64D9FHJz9f9TQ6by0828gfrrwOK5S");
-// hasab.chat
-//   .streamResponse("Hello, can you tell me a joke?")
-//   .on("data", (chunk) => {
-//     console.log(chunk);
-//     process.stdout.write(chunk);
-//   })
-//   .on("error", (err) => {
-//     console.error("Stream error:", err);
-//   })
-//   .on("end", () => {
-//     console.log("\nStream ended.");
-//   });
-const chatHistory = await hasab.chat.getChatTitle();
-log(chatHistory);
+const speakers = await hasab.tts.getSpeakers("amh");
+console.log(speakers);
 //# sourceMappingURL=client.js.map
