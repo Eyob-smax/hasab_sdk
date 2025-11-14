@@ -91,17 +91,19 @@ export class HasabClient {
 
           switch (status) {
             case 400:
-              throw new HasabValidationError(data?.message || "Bad request");
+              throw new HasabValidationError(data?.error || "Bad request");
             case 401:
             case 403:
-              throw new HasabAuthError("Unauthorized or invalid API key.");
+              throw new HasabAuthError(
+                data?.error || "Unauthorized or invalid API key."
+              );
             case 404:
-              throw new HasabApiError("Endpoint not found", 404);
+              throw new HasabApiError(data?.error || "Endpoint not found", 404);
             case 408:
               throw new HasabTimeoutError("Request timed out.");
             case 429:
               throw new HasabRateLimitError(
-                "Rate limit exceeded. Try again later.",
+                data?.error || "Rate limit exceeded. Try again later.",
                 Number(error.response.headers["retry-after"]) || undefined
               );
             case 500:
@@ -109,11 +111,12 @@ export class HasabClient {
             case 503:
             case 504:
               throw new HasabApiError(
-                "Server error. Please retry later.",
+                data?.error || "Server error. Please retry later.",
                 status
               );
             default:
-              throw new HasabApiError(data?.message || "API Error", status);
+              console.log("Unhandled error response:", data);
+              throw new HasabApiError(data?.error || "API Error", status);
           }
         } else if (error.request) {
           throw new HasabNetworkError(
@@ -128,7 +131,6 @@ export class HasabClient {
     );
   }
 
-  // === TRANSCRIPTION ===
   public transcription = {
     transcribe: async (
       file: File | Blob | string
@@ -397,8 +399,3 @@ export class HasabClient {
     return { success: false, message };
   }
 }
-
-const hasab = new HasabClient("HASAB_KEY_o64D9FHJz9f9TQ6by0828gfrrwOK5S");
-
-const analytics = await hasab.tts.getAnalytics();
-console.log(analytics);

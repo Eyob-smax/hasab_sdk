@@ -19,7 +19,7 @@ export async function chat(message, client, options) {
                 "Content-Type": "application/json",
             },
         });
-        if (!data || !data.message) {
+        if (!data) {
             throw new HasabApiError(data.message, data.status);
         }
         return {

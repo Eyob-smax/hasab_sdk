@@ -39,7 +39,7 @@ export async function chat(
       },
     });
 
-    if (!data || !data.message) {
+    if (!data) {
       throw new HasabApiError(data.message, data.status);
     }
 
