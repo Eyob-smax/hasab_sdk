@@ -120,7 +120,6 @@ export async function tts(
       throw new HasabUnknownError(axiosErr.message);
     }
 
-    // Fallback
     const msg = error instanceof Error ? error.message : "Unknown error";
     throw new HasabUnknownError(`Unexpected error during TTS: ${msg}`);
   }

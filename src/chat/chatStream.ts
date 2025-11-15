@@ -4,7 +4,7 @@ import {
   HasabNetworkError,
   HasabUnknownError,
 } from "../common/errors.js";
-import { ChatOptionsConfig } from "../common/types.js";
+import { ChatOptionsConfig } from "../types/index.js";
 import axios, { AxiosInstance, AxiosError } from "axios";
 
 export async function chatStream(

@@ -10,22 +10,10 @@ import {
 } from "../common/errors.js";
 import { TranscriptionHistoryResponse } from "../types/index.js";
 
-/**
- * Options for fetching transcription history
- */
 export interface GetTranscriptionHistoryOptions {
-  /** Page number (default: 1) */
   page?: number;
 }
 
-/**
- * Fetches paginated list of user's transcription jobs.
- *
- * @param apikey - Your Hasab API key
- * @param client - Pre-configured Axios instance
- * @param options - Pagination options
- * @returns TranscriptionHistoryResponse
- */
 export async function getTranscriptionHistory(
   apikey: string,
   client: AxiosInstance,
@@ -33,7 +21,6 @@ export async function getTranscriptionHistory(
 ): Promise<TranscriptionHistoryResponse> {
   const { page = 1 } = options;
 
-  // === Input Validation ===
   if (!Number.isInteger(page) || page < 1) {
     throw new HasabValidationError("Page must be a positive integer.");
   }
@@ -53,7 +40,6 @@ export async function getTranscriptionHistory(
 
     const data = response.data;
 
-    // === Response Validation ===
     if (!data || typeof data !== "object") {
       throw new HasabApiError("Invalid response format", 500);
     }
@@ -68,7 +54,6 @@ export async function getTranscriptionHistory(
 
     const payload = data.data;
 
-    // Validate required pagination fields
     const required = ["current_page", "data", "total", "per_page"] as const;
     for (const field of required) {
       if (!(field in payload)) {
@@ -103,7 +88,6 @@ export async function getTranscriptionHistory(
       message: data.message,
     };
   } catch (error: unknown) {
-    // === Centralized Error Handling ===
     if (error instanceof HasabValidationError) throw error;
 
     if (error instanceof AxiosError) {

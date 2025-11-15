@@ -2,6 +2,7 @@ import axios, { AxiosInstance, AxiosError } from "axios";
 import { transcribe } from "./transcription/transcription.js";
 import type {
   ChatHistoryResponse,
+  ChatOptionsConfig,
   ChatResponse,
   ChatTitle,
   ClearChat,
@@ -30,7 +31,6 @@ import {
 import { BASE_URL } from "./common/constants.js";
 import { chat } from "./chat/chat.js";
 import { chatStream } from "./chat/chatStream.js";
-import { ChatOptionsConfig } from "./common/types.js";
 import { Readable } from "stream";
 import { getChatHistory } from "./chat/chatHistory.js";
 import { getChatTitle } from "./chat/getChatTitle.js";
