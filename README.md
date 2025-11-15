@@ -1,3 +1,5 @@
+<!DOCTYPE html>
+<html>
 <h1 align="center">HasabClient SDK</h1>
 
 <p>
@@ -290,3 +292,4 @@ console.log(result.message);
 
 <h2>📄 License</h2>
 <p>MIT License — see <code>LICENSE</code> for details.</p>
+</html>
