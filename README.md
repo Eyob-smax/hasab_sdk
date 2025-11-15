@@ -1,10 +1,20 @@
 # HasabClient SDK
 
-The **HasabClient SDK** is a TypeScript library for interacting with the Hasab API. It provides a simple, type-safe interface for **chat**, **transcription**, **translation**, and **text-to-speech (TTS)** synthesis. The SDK supports both synchronous and streaming operations, with built-in error handling and support for Node.js environments.
+The **HasabClient SDK** is a TypeScript library for interacting with the Hasab API. It provides a simple, type-safe interface for **chat**, **transcription**, **translation**, and **text-to-speech (TTS)** synthesis. Designed primarily for **Node.js** environments, it supports both synchronous and streaming features with robust error handling.
+
+## Motivation
+
+When I first saw the voice and text qualities of this AI for local languages, it was insane, but it was hard to send and get really simple data, so I decided to build this tool for devs.
+
+## Links
+
+- **GitHub Repo**: [https://github.com/Eyob-smax/hasab_sdk](https://github.com/yourusername/hasab-client) (Replace with your actual repo URL)
+- **My Telegram Community**: [https://t.me/devwitheyob](https://t.me/yourcommunity) (Replace with your actual Telegram link)
+- **Hasab AI Website**: [https://hasab.ai](https://hasab.ai)
 
 ## Features
 
-- **Chat**: Send messages, stream responses, manage history, titles, and clear conversations.
+- **Chat**: Send messages, stream responses, retrieve history, get/update titles, and clear conversations.
 - **Transcription**: Upload audio for transcription and retrieve history.
 - **Translation**: Translate text and retrieve history.
 - **Text-to-Speech (TTS)**: Synthesize audio, stream audio, retrieve speakers, history, analytics, individual records, and delete records.
@@ -14,7 +24,7 @@ The **HasabClient SDK** is a TypeScript library for interacting with the Hasab A
 Install the SDK via npm (assuming it's published; otherwise, clone and build locally):
 
 ```bash
-npm install hasab-client
+npm install hasab-sdk
 ```
 
 ### Dependencies
@@ -27,7 +37,7 @@ npm install hasab-client
 Add them if needed:
 
 ```bash
-npm install axios form-data
+npm install axios
 ```
 
 ## Getting Started
@@ -52,11 +62,30 @@ All methods return `{ success: false, message: string }` on failure. Errors are 
 
 Send a chat message and get a full response.
 
+**Minimal (Required Parameters Only)**:
+
+```ts
+try {
+  const response = await client.chat.sendMessage({
+    message: "Hello, how are you?",
+  });
+  if (response.success) {
+    console.log("Response:", response.content);
+  } else {
+    console.error("Error:", response.message);
+  }
+} catch (error) {
+  console.error("Unexpected error:", error.message);
+}
+```
+
+**With Optional Parameters**:
+
 ```ts
 try {
   const response = await client.chat.sendMessage(
     { message: "Hello, how are you?" },
-    { model: "hasab-1-lite", temperature: 0.7 }
+    { model: "hasab-1-lite", temperature: 0.7, maxTokens: 512 }
   );
   if (response.success) {
     console.log("Response:", response.content);
@@ -72,13 +101,31 @@ try {
 
 Stream chat responses in real-time. Returns a `Readable` stream.
 
+**Minimal (Required Parameters Only)**:
+
+```ts
+import fs from "fs";
+import { pipeline } from "stream/promises";
+
+const stream = client.chat.streamResponse({ message: "Tell me a story" });
+
+stream.on("data", (chunk) => process.stdout.write(chunk));
+stream.on("error", (err) => console.error("Stream error:", err.message));
+stream.on("end", () => console.log("\nDone"));
+
+// Optional: Save to file
+await pipeline(stream, fs.createWriteStream("chat_output.txt"));
+```
+
+**With Optional Parameters**:
+
 ```ts
 import fs from "fs";
 import { pipeline } from "stream/promises";
 
 const stream = client.chat.streamResponse(
   { message: "Tell me a story" },
-  { temperature: 0.8 }
+  { temperature: 0.8, model: "hasab-1-lite", maxTokens: 1024 }
 );
 
 stream.on("data", (chunk) => process.stdout.write(chunk));
@@ -91,7 +138,7 @@ await pipeline(stream, fs.createWriteStream("chat_output.txt"));
 
 ### Get Chat History
 
-Retrieve conversation history.
+Retrieve conversation history. No optional parameters.
 
 ```ts
 const history = await client.chat.getChatHistory();
@@ -106,7 +153,7 @@ if (history.success) {
 
 ### Get Chat Title
 
-Get the current conversation title.
+Get the current conversation title. No optional parameters.
 
 ```ts
 const title = await client.chat.getChatTitle();
@@ -119,7 +166,7 @@ if (title.success) {
 
 ### Clear Chat
 
-Clear the current conversation.
+Clear the current conversation. No optional parameters.
 
 ```ts
 const result = await client.chat.clearChat();
@@ -132,7 +179,7 @@ if (result.success) {
 
 ### Update Title
 
-Update the conversation title.
+Update the conversation title. No optional parameters beyond required.
 
 ```ts
 const result = await client.chat.updateTitle({ title: "New Title" });
@@ -147,7 +194,9 @@ if (result.success) {
 
 ### Transcribe Audio
 
-Upload and transcribe an audio file.
+Upload and transcribe an audio file. Supports Buffer, Uint8Array, ArrayBuffer, string path, File, or Blob.
+
+**Minimal (Required Parameters Only)**:
 
 ```ts
 const result = await client.transcription.transcribe({
@@ -161,12 +210,41 @@ if (result.success) {
 }
 ```
 
+**With Buffer Example**:
+
+```ts
+import fs from "fs/promises";
+
+const audioBuffer = await fs.readFile("path/to/audio.mp3");
+const result = await client.transcription.transcribe({ file: audioBuffer });
+if (result.success) {
+  console.log("Transcription:", result.transcription);
+} else {
+  console.error("Error:", result.message);
+}
+```
+
 ### Get Transcription History
 
 Retrieve paginated transcription jobs.
 
+**Minimal (No Options)**:
+
 ```ts
-const history = await client.transcription.getHistory({ page: 1 });
+const history = await client.transcription.getHistory();
+if (history.success) {
+  history.data.data.forEach((job) => {
+    console.log(`ID: ${job.id}, File: ${job.original_filename}`);
+  });
+} else {
+  console.error("Error:", history.message);
+}
+```
+
+**With Optional Parameters**:
+
+```ts
+const history = await client.transcription.getHistory({ page: 2 });
 if (history.success) {
   history.data.data.forEach((job) => {
     console.log(`ID: ${job.id}, File: ${job.original_filename}`);
@@ -181,6 +259,22 @@ if (history.success) {
 ### Translate Text
 
 Translate text to a target language.
+
+**Minimal (Required Parameters Only)**:
+
+```ts
+const result = await client.translate.translateText({
+  text: "Hello, how are you?",
+  targetLanguage: "amh",
+});
+if (result.success) {
+  console.log("Translated:", result.data.translation.translated_text);
+} else {
+  console.error("Error:", result.message);
+}
+```
+
+**With Optional Parameters**:
 
 ```ts
 const result = await client.translate.translateText({
@@ -197,7 +291,7 @@ if (result.success) {
 
 ### Get Translation History
 
-Retrieve translation history.
+Retrieve translation history. No optional parameters.
 
 ```ts
 const history = await client.translate.getHistory();
@@ -215,6 +309,26 @@ if (history.success) {
 ### Synthesize (Synchronous)
 
 Generate speech audio (base64 buffer).
+
+**Minimal (Required Parameters Only)**:
+
+```ts
+import fs from "fs/promises";
+
+const result = await client.tts.synthesize({
+  text: "Hello, this is TTS.",
+  language: "eng",
+});
+if (result.success) {
+  const buffer = Buffer.from(result.audio_buffer, "base64");
+  await fs.writeFile("output.mp3", buffer);
+  console.log("Audio saved.");
+} else {
+  console.error("Error:", result.message);
+}
+```
+
+**With Optional Parameters**:
 
 ```ts
 import fs from "fs/promises";
@@ -237,6 +351,24 @@ if (result.success) {
 
 Stream TTS audio in real-time.
 
+**Minimal (Required Parameters Only)**:
+
+```ts
+import fs from "fs";
+import { pipeline } from "stream/promises";
+
+const ttsStream = client.tts.streamResponse({
+  text: "This is streaming TTS.",
+  language: "eng",
+  speaker_name: "default",
+});
+
+await pipeline(ttsStream, fs.createWriteStream("output_stream.mp3"));
+console.log("Streamed audio saved.");
+```
+
+**With Optional Parameters**:
+
 ```ts
 import fs from "fs";
 import { pipeline } from "stream/promises";
@@ -246,6 +378,7 @@ const ttsStream = client.tts.streamResponse({
   language: "eng",
   speaker_name: "default",
   sample_rate: 22050,
+  timeout: 60000,
 });
 
 await pipeline(ttsStream, fs.createWriteStream("output_stream.mp3"));
@@ -254,7 +387,20 @@ console.log("Streamed audio saved.");
 
 ### Get Speakers
 
-Retrieve available speakers, optionally by language.
+Retrieve available speakers.
+
+**Minimal (No Language)**:
+
+```ts
+const speakers = await client.tts.getSpeakers({});
+if (speakers.success) {
+  console.log("All Speakers:", speakers.languages);
+} else {
+  console.error("Error:", speakers.message);
+}
+```
+
+**With Optional Language**:
 
 ```ts
 const speakers = await client.tts.getSpeakers({ language: "amh" });
@@ -269,8 +415,25 @@ if (speakers.success) {
 
 Retrieve TTS synthesis history.
 
+**Minimal (No Options)**:
+
 ```ts
-const history = await client.tts.getHistory({ limit: 10 });
+const history = await client.tts.getHistory();
+if (history.success) {
+  history.records.forEach((r) => console.log(`ID: ${r.id}, Text: ${r.text}`));
+} else {
+  console.error("Error:", history.message);
+}
+```
+
+**With Optional Parameters**:
+
+```ts
+const history = await client.tts.getHistory({
+  limit: 10,
+  offset: 0,
+  status: "success",
+});
 if (history.success) {
   history.records.forEach((r) => console.log(`ID: ${r.id}, Text: ${r.text}`));
 } else {
@@ -282,8 +445,24 @@ if (history.success) {
 
 Retrieve TTS usage analytics.
 
+**Minimal (No Options)**:
+
 ```ts
-const analytics = await client.tts.getAnalytics({ date_from: "2025-10-01" });
+const analytics = await client.tts.getAnalytics();
+if (analytics.success) {
+  console.log("Total Tokens:", analytics.total_tokens_used);
+} else {
+  console.error("Error:", analytics.message);
+}
+```
+
+**With Optional Parameters**:
+
+```ts
+const analytics = await client.tts.getAnalytics({
+  date_from: "2025-10-01",
+  date_to: "2025-10-31",
+});
 if (analytics.success) {
   console.log("Total Tokens:", analytics.total_tokens_used);
 } else {
