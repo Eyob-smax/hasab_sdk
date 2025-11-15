@@ -1,4 +1,4 @@
-import type { ChatHistoryResponse, ChatResponse, ChatTitle, ClearChat, DeleteTTSRecordResponse, GetTTSRecordResponse, SpeakersResponse, TranscriptionHistoryResponse, TranscriptionResponseFull, TranslationHistoryResponse, TranslationResponseMapped, TTSAnalyticsResponse, TTSHistoryResponse, TTSResponse } from "./types/response.js";
+import type { ChatHistoryResponse, ChatResponse, ChatTitle, ClearChat, DeleteTTSRecordResponse, GetTTSRecordResponse, Languages, SpeakersResponse, TranscriptionHistoryResponse, TranscriptionResponseFull, TranslationHistoryResponse, TranslationResponseMapped, TTSAnalyticsResponse, TTSHistoryResponse, TTSResponse } from "./types/response.js";
 import { ChatOptionsConfig } from "./common/types.js";
 import { Readable } from "stream";
 import { UpdateTitleResponse } from "./chat/updateTitle.js";
@@ -34,7 +34,7 @@ export declare class HasabClient {
         updateTitle: (title: string) => Promise<UpdateTitleResponse | ErrorResponse>;
     };
     translate: {
-        translateText: (text: string, targetLanguage: LanguageEnum, sourceLanguage?: LanguageEnum) => Promise<TranslationResponseMapped | ErrorResponse>;
+        translateText: (text: string, targetLanguage: Languages, sourceLanguage?: Languages) => Promise<TranslationResponseMapped | ErrorResponse>;
         getHistory: () => Promise<TranslationHistoryResponse | ErrorResponse>;
     };
     tts: {

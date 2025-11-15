@@ -296,5 +296,5 @@ type TTSStreamStartResponse = {
     status: "started" | "failed";
     message?: string;
 };
-export type { ChatResponse, TranscriptionResponse, TranslationResponseMapped, TranslationResponseOriginal, TTSResponse, TranscriptionResponseFull, ChatHistoryResponse, ChatTitle, ClearChat, UpcateChatTitle, TranslationHistory, TranslationHistoryResponse, SpeakersResponse, TTSHistoryResponse, TTSHistoryRecord, TTSAnalyticsResponse, DailyUsage, GetTTSRecordResponse, DeleteTTSRecordResponse, TTSStreamStartResponse, TranscriptionHistoryResponse, };
+export type { ChatResponse, TranscriptionResponse, TranslationResponseMapped, TranslationResponseOriginal, TTSResponse, TranscriptionResponseFull, ChatHistoryResponse, ChatTitle, ClearChat, UpcateChatTitle, TranslationHistory, TranslationHistoryResponse, SpeakersResponse, TTSHistoryResponse, TTSHistoryRecord, TTSAnalyticsResponse, DailyUsage, GetTTSRecordResponse, DeleteTTSRecordResponse, TTSStreamStartResponse, TranscriptionHistoryResponse, Languages, };
 //# sourceMappingURL=response.d.ts.map

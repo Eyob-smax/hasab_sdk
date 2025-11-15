@@ -1,5 +1,3 @@
-import type { TranscriptionRequest } from "../types/request.js";
-import type { TranscriptionResponseFull } from "../types/response.js";
 import { AxiosInstance, AxiosError } from "axios";
 import FormData from "form-data";
 import fs from "fs";
@@ -13,6 +11,10 @@ import {
   HasabTimeoutError,
   HasabUnknownError,
 } from "../common/errors.js";
+import {
+  TranscriptionRequest,
+  TranscriptionResponseFull,
+} from "../types/index.js";
 
 export async function transcribe(
   request: TranscriptionRequest,

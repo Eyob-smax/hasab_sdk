@@ -1,6 +1,5 @@
 import axios, { AxiosInstance, AxiosError } from "axios";
 import { transcribe } from "./transcription/transcription.js";
-// import fs from "fs/promises";
 import type {
   ChatHistoryResponse,
   ChatResponse,
@@ -8,6 +7,7 @@ import type {
   ClearChat,
   DeleteTTSRecordResponse,
   GetTTSRecordResponse,
+  Languages,
   SpeakersResponse,
   TranscriptionHistoryResponse,
   TranscriptionResponseFull,
@@ -16,7 +16,7 @@ import type {
   TTSAnalyticsResponse,
   TTSHistoryResponse,
   TTSResponse,
-} from "./types/response.js";
+} from "./types/index.js";
 import {
   HasabError,
   HasabApiError,
@@ -37,7 +37,6 @@ import { getChatTitle } from "./chat/getChatTitle.js";
 import { clearChat } from "./chat/clearChat.js";
 import { updateTitle, UpdateTitleResponse } from "./chat/updateTitle.js";
 import { translate } from "./translation/translation.js";
-import { LanguageEnum } from "./common/languageEnum.js";
 import { getTranslationHistory } from "./translation/translationHistory.js";
 import { tts } from "./TTS/textToSpeech.js";
 import { getSpeakers } from "./TTS/getSpeakers.js";
@@ -51,14 +50,12 @@ import {
   GetTranscriptionHistoryOptions,
 } from "./transcription/getHistory.js";
 
-// Unified error response for failed operations
 type ErrorResponse = { success: false; message: string };
-
 export class HasabClient {
   private apikey: string;
   private client: AxiosInstance;
 
-  constructor(apikey: string) {
+  constructor({ apikey }: { apikey: string }) {
     if (!apikey || typeof apikey !== "string") {
       throw new HasabAuthError("API key is required and must be a string.");
     }
@@ -132,9 +129,11 @@ export class HasabClient {
   }
 
   public transcription = {
-    transcribe: async (
-      file: File | Blob | string
-    ): Promise<TranscriptionResponseFull | ErrorResponse> => {
+    transcribe: async ({
+      file,
+    }: {
+      file: Buffer | Uint8Array | ArrayBuffer | string | File | Blob;
+    }): Promise<TranscriptionResponseFull | ErrorResponse> => {
       try {
         const result = await transcribe({ audio_file: file }, this.client);
         return result;
@@ -162,7 +161,7 @@ export class HasabClient {
 
   public chat = {
     sendMessage: async (
-      message: string,
+      { message }: { message: string },
       options?: ChatOptionsConfig
     ): Promise<ChatResponse | ErrorResponse> => {
       try {
@@ -174,7 +173,7 @@ export class HasabClient {
     },
 
     streamResponse: (
-      message: string,
+      { message }: { message: string },
       options?: ChatOptionsConfig
     ): Readable & { cancel: () => void } => {
       const stream = new Readable({ read() {} }) as Readable & {
@@ -244,9 +243,11 @@ export class HasabClient {
       }
     },
 
-    updateTitle: async (
-      title: string
-    ): Promise<UpdateTitleResponse | ErrorResponse> => {
+    updateTitle: async ({
+      title,
+    }: {
+      title: string;
+    }): Promise<UpdateTitleResponse | ErrorResponse> => {
       try {
         return await updateTitle(this.client, title);
       } catch (error: unknown) {
@@ -256,11 +257,15 @@ export class HasabClient {
   };
 
   public translate = {
-    translateText: async (
-      text: string,
-      targetLanguage: LanguageEnum,
-      sourceLanguage?: LanguageEnum
-    ): Promise<TranslationResponseMapped | ErrorResponse> => {
+    translateText: async ({
+      text,
+      targetLanguage,
+      sourceLanguage,
+    }: {
+      text: string;
+      targetLanguage: Languages;
+      sourceLanguage?: Languages;
+    }): Promise<TranslationResponseMapped | ErrorResponse> => {
       try {
         return await translate(
           text,
@@ -285,11 +290,15 @@ export class HasabClient {
   };
 
   public tts = {
-    synthesize: async (
-      text: string,
-      language: LanguageEnum,
-      speaker_name?: string
-    ): Promise<TTSResponse | ErrorResponse> => {
+    synthesize: async ({
+      text,
+      language,
+      speaker_name,
+    }: {
+      text: string;
+      language: Languages;
+      speaker_name?: string;
+    }): Promise<TTSResponse | ErrorResponse> => {
       try {
         return await tts(text, language, speaker_name, this.client);
       } catch (error: unknown) {
@@ -339,9 +348,11 @@ export class HasabClient {
       return stream;
     },
 
-    getSpeakers: async (
-      language?: string
-    ): Promise<SpeakersResponse | { success: false; message: string }> => {
+    getSpeakers: async ({
+      language,
+    }: {
+      language?: Languages;
+    }): Promise<SpeakersResponse | { success: false; message: string }> => {
       try {
         return await getSpeakers(this.client, language);
       } catch (error: unknown) {
@@ -367,9 +378,11 @@ export class HasabClient {
       }
     },
 
-    getRecord: async (
-      recordId: number
-    ): Promise<GetTTSRecordResponse | { success: false; message: string }> => {
+    getRecord: async ({
+      recordId,
+    }: {
+      recordId: number;
+    }): Promise<GetTTSRecordResponse | { success: false; message: string }> => {
       try {
         return await getTTSRecord(this.client, recordId);
       } catch (error: unknown) {
@@ -377,9 +390,11 @@ export class HasabClient {
       }
     },
 
-    deleteRecord: async (
-      recordId: number
-    ): Promise<
+    deleteRecord: async ({
+      recordId,
+    }: {
+      recordId: number;
+    }): Promise<
       DeleteTTSRecordResponse | { success: false; message: string }
     > => {
       try {

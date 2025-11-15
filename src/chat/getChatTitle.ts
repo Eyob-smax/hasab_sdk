@@ -8,7 +8,7 @@ import {
   HasabTimeoutError,
   HasabUnknownError,
 } from "../common/errors.js";
-import { ChatTitle } from "../types/response.js";
+import { ChatTitle } from "../types/index.js";
 
 export async function getChatTitle(client: AxiosInstance): Promise<ChatTitle> {
   try {

@@ -11,7 +11,7 @@ import {
 import {
   TranslationHistory,
   TranslationHistoryResponse,
-} from "../types/response.js";
+} from "../types/index.js";
 
 export async function getTranslationHistory(
   client: AxiosInstance

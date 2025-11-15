@@ -8,7 +8,7 @@ import {
   HasabTimeoutError,
   HasabUnknownError,
 } from "../common/errors.js";
-import { DeleteTTSRecordResponse } from "../types/response.js";
+import { DeleteTTSRecordResponse } from "../types/index.js";
 
 export async function deleteTTSRecord(
   client: AxiosInstance,

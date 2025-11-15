@@ -8,7 +8,7 @@ import {
   HasabTimeoutError,
   HasabUnknownError,
 } from "../common/errors.js";
-import { GetTTSRecordResponse } from "../types/response.js";
+import { GetTTSRecordResponse } from "../types/index.js";
 
 export async function getTTSRecord(
   client: AxiosInstance,

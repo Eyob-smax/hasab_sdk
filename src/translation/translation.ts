@@ -12,7 +12,7 @@ import { LanguageEnum } from "../common/languageEnum.js";
 import type {
   TranslationResponseMapped,
   TranslationResponseOriginal,
-} from "../types/response.js";
+} from "../types/index.js";
 
 export async function translate(
   text: string,

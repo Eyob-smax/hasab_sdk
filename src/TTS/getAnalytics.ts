@@ -8,7 +8,7 @@ import {
   HasabTimeoutError,
   HasabUnknownError,
 } from "../common/errors.js";
-import { TTSAnalyticsResponse } from "../types/response.js";
+import { TTSAnalyticsResponse } from "../types/index.js";
 
 export interface GetTTSAnalyticsOptions {
   date_from?: string;

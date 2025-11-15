@@ -8,7 +8,7 @@ import {
   HasabTimeoutError,
   HasabUnknownError,
 } from "../common/errors.js";
-import { TTSResponse } from "../types/response.js";
+import { TTSResponse } from "../types/index.js";
 
 export async function tts(
   text: string,

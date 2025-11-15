@@ -8,7 +8,7 @@ import {
   HasabTimeoutError,
   HasabUnknownError,
 } from "../common/errors.js";
-import { SpeakersResponse } from "../types/response.js";
+import { SpeakersResponse } from "../types/index.js";
 
 export async function getSpeakers(
   client: AxiosInstance,

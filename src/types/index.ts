@@ -354,7 +354,21 @@ type TTSStreamStartResponse = {
   message?: string;
 };
 
+type TranscriptionRequest = {
+  audio_file: Buffer | Uint8Array | ArrayBuffer | string | File | Blob;
+};
+
+type ChatRequest = {};
+
+type ChatSendMessage = {
+  message: string;
+  model?: string;
+};
+
 export type {
+  TranscriptionRequest,
+  ChatRequest,
+  ChatSendMessage,
   ChatResponse,
   TranscriptionResponse,
   TranslationResponseMapped,
@@ -376,4 +390,5 @@ export type {
   DeleteTTSRecordResponse,
   TTSStreamStartResponse,
   TranscriptionHistoryResponse,
+  Languages,
 };

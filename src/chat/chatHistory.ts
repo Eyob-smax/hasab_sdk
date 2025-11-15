@@ -1,5 +1,5 @@
 import { AxiosInstance } from "axios";
-import type { ChatHistoryResponse } from "../types/response.js";
+import type { ChatHistoryResponse } from "../types/index.js";
 import {
   HasabApiError,
   HasabNetworkError,

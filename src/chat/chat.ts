@@ -5,7 +5,7 @@ import {
   HasabNetworkError,
   HasabValidationError,
 } from "../common/errors.js";
-import { ChatResponse } from "../types/response.js";
+import { ChatResponse } from "../types/index.js";
 import { ChatOptionsConfig } from "../common/types.js";
 
 export async function chat(
