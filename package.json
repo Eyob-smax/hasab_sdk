@@ -2,10 +2,18 @@
   "name": "hasab-sdk",
   "version": "1.1.0",
   "description": "Hasab AI SDK for Node.js (chat, TTS, transcription, translation)",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "dist/client.js",
+  "types": "dist/client.d.ts",
+  "module": "dist/client.js",
+  "exports": {
+    ".": {
+      "import": "./dist/client.js",
+      "require": "./dist/client.js",
+      "types": "./dist/client.d.ts"
+    }
+  },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc --project tsconfig.json",
     "prepublishOnly": "npm run build",
     "dev": "tsc --watch"
   },
@@ -22,7 +30,7 @@
   "license": "MIT",
   "type": "module",
   "files": [
-    "dist"
+    "dist/**/*"
   ],
   "dependencies": {
     "axios": "^1.13.2"
