@@ -4,7 +4,7 @@ The **HasabClient SDK** is a TypeScript library for interacting with the Hasab A
 
 ## Motivation
 
-When I first saw the voice and text qualities of this AI for local languages, it was insane, but it was hard to send and get really simple data, so I decided to build this tool for devs.
+When I first saw the voice and text qualities of this AI for local languages, it was insane, but it was hard to send and get really simple data, so I decided to build this tool for the community.
 
 ## Links
 
