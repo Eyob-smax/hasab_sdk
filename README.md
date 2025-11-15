@@ -8,9 +8,9 @@ When I first saw the voice and text qualities of this AI for local languages, it
 
 ## Links
 
-- **GitHub Repo**: [https://github.com/Eyob-smax/hasab_sdk](https://github.com/yourusername/hasab-client) (Replace with your actual repo URL)
-- **My Telegram Community**: [https://t.me/devwitheyob](https://t.me/yourcommunity) (Replace with your actual Telegram link)
-- **Hasab AI Website**: [https://hasab.ai](https://hasab.ai)
+- **GitHub Repo**: [Feel free to make PR](https://github.com/Eyob-smax/hasab_sdk)
+- **My Telegram Community**: [Join my tech community](https://t.me/devwitheyob)
+- **Hasab AI Website**: [The main website](https://hasab.ai)
 
 ## Features
 
