@@ -20,9 +20,9 @@ import { deleteTTSRecord } from "./TTS/deletRecord.js";
 import { ttsStream } from "./TTS/textToSpeechStream.js";
 import { getTranscriptionHistory, } from "./transcription/getHistory.js";
 export class HasabClient {
-    constructor(apikey) {
+    constructor({ apikey }) {
         this.transcription = {
-            transcribe: async (file) => {
+            transcribe: async ({ file, }) => {
                 try {
                     const result = await transcribe({ audio_file: file }, this.client);
                     return result;
@@ -42,7 +42,7 @@ export class HasabClient {
             },
         };
         this.chat = {
-            sendMessage: async (message, options) => {
+            sendMessage: async ({ message }, options) => {
                 try {
                     const result = await chat(message, this.client, options);
                     return result;
@@ -51,7 +51,7 @@ export class HasabClient {
                     return this.handleError(error);
                 }
             },
-            streamResponse: (message, options) => {
+            streamResponse: ({ message }, options) => {
                 const stream = new Readable({ read() { } });
                 let cancelFn = () => { };
                 const startStream = async () => {
@@ -103,7 +103,7 @@ export class HasabClient {
                     return this.handleError(error);
                 }
             },
-            updateTitle: async (title) => {
+            updateTitle: async ({ title, }) => {
                 try {
                     return await updateTitle(this.client, title);
                 }
@@ -113,7 +113,7 @@ export class HasabClient {
             },
         };
         this.translate = {
-            translateText: async (text, targetLanguage, sourceLanguage) => {
+            translateText: async ({ text, targetLanguage, sourceLanguage, }) => {
                 try {
                     return await translate(text, this.client, targetLanguage, sourceLanguage);
                 }
@@ -132,7 +132,7 @@ export class HasabClient {
             },
         };
         this.tts = {
-            synthesize: async (text, language, speaker_name) => {
+            synthesize: async ({ text, language, speaker_name, }) => {
                 try {
                     return await tts(text, language, speaker_name, this.client);
                 }
@@ -167,7 +167,7 @@ export class HasabClient {
                 };
                 return stream;
             },
-            getSpeakers: async (language) => {
+            getSpeakers: async ({ language, }) => {
                 try {
                     return await getSpeakers(this.client, language);
                 }
@@ -191,7 +191,7 @@ export class HasabClient {
                     return this.handleError(error);
                 }
             },
-            getRecord: async (recordId) => {
+            getRecord: async ({ recordId, }) => {
                 try {
                     return await getTTSRecord(this.client, recordId);
                 }
@@ -199,7 +199,7 @@ export class HasabClient {
                     return this.handleError(error);
                 }
             },
-            deleteRecord: async (recordId) => {
+            deleteRecord: async ({ recordId, }) => {
                 try {
                     return await deleteTTSRecord(this.client, recordId);
                 }

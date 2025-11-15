@@ -1,5 +1,5 @@
 import { AxiosInstance } from "axios";
-import { TTSHistoryResponse } from "../types/response.js";
+import { TTSHistoryResponse } from "../types/index.js";
 export interface GetTTSHistoryOptions {
     limit?: number;
     offset?: number;

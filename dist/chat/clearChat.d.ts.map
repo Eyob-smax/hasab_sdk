@@ -1,1 +1,1 @@
-{"version":3,"file":"clearChat.d.ts","sourceRoot":"","sources":["../../src/chat/clearChat.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,aAAa,EAAc,MAAM,OAAO,CAAC;AAUlD,OAAO,EAAE,SAAS,EAAE,MAAM,sBAAsB,CAAC;AAEjD,wBAAsB,SAAS,CAAC,MAAM,EAAE,aAAa,GAAG,OAAO,CAAC,SAAS,CAAC,CAsEzE"}
+{"version":3,"file":"clearChat.d.ts","sourceRoot":"","sources":["../../src/chat/clearChat.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,aAAa,EAAc,MAAM,OAAO,CAAC;AAUlD,OAAO,EAAE,SAAS,EAAE,MAAM,mBAAmB,CAAC;AAE9C,wBAAsB,SAAS,CAAC,MAAM,EAAE,aAAa,GAAG,OAAO,CAAC,SAAS,CAAC,CAsEzE"}

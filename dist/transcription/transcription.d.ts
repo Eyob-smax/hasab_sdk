@@ -1,5 +1,4 @@
-import type { TranscriptionRequest } from "../types/request.js";
-import type { TranscriptionResponseFull } from "../types/response.js";
 import { AxiosInstance } from "axios";
+import { TranscriptionRequest, TranscriptionResponseFull } from "../types/index.js";
 export declare function transcribe(request: TranscriptionRequest, client: AxiosInstance): Promise<TranscriptionResponseFull>;
 //# sourceMappingURL=transcription.d.ts.map

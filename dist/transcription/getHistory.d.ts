@@ -1,5 +1,5 @@
 import { AxiosInstance } from "axios";
-import { TranscriptionHistoryResponse } from "../types/response.js";
+import { TranscriptionHistoryResponse } from "../types/index.js";
 /**
  * Options for fetching transcription history
  */

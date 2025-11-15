@@ -1,8 +1,7 @@
-import type { ChatHistoryResponse, ChatResponse, ChatTitle, ClearChat, DeleteTTSRecordResponse, GetTTSRecordResponse, Languages, SpeakersResponse, TranscriptionHistoryResponse, TranscriptionResponseFull, TranslationHistoryResponse, TranslationResponseMapped, TTSAnalyticsResponse, TTSHistoryResponse, TTSResponse } from "./types/response.js";
+import type { ChatHistoryResponse, ChatResponse, ChatTitle, ClearChat, DeleteTTSRecordResponse, GetTTSRecordResponse, Languages, SpeakersResponse, TranscriptionHistoryResponse, TranscriptionResponseFull, TranslationHistoryResponse, TranslationResponseMapped, TTSAnalyticsResponse, TTSHistoryResponse, TTSResponse } from "./types/index.js";
 import { ChatOptionsConfig } from "./common/types.js";
 import { Readable } from "stream";
 import { UpdateTitleResponse } from "./chat/updateTitle.js";
-import { LanguageEnum } from "./common/languageEnum.js";
 import { GetTTSHistoryOptions } from "./TTS/getHistory.js";
 import { GetTTSAnalyticsOptions } from "./TTS/getAnalytics.js";
 import { TTSStreamRequest } from "./TTS/textToSpeechStream.js";
@@ -14,35 +13,55 @@ type ErrorResponse = {
 export declare class HasabClient {
     private apikey;
     private client;
-    constructor(apikey: string);
+    constructor({ apikey }: {
+        apikey: string;
+    });
     private initializeInterceptors;
     transcription: {
-        transcribe: (file: File | Blob | string) => Promise<TranscriptionResponseFull | ErrorResponse>;
+        transcribe: ({ file, }: {
+            file: Buffer | Uint8Array | ArrayBuffer | string | File | Blob;
+        }) => Promise<TranscriptionResponseFull | ErrorResponse>;
         getHistory: (options?: GetTranscriptionHistoryOptions) => Promise<TranscriptionHistoryResponse | {
             success: false;
             message: string;
         }>;
     };
     chat: {
-        sendMessage: (message: string, options?: ChatOptionsConfig) => Promise<ChatResponse | ErrorResponse>;
-        streamResponse: (message: string, options?: ChatOptionsConfig) => Readable & {
+        sendMessage: ({ message }: {
+            message: string;
+        }, options?: ChatOptionsConfig) => Promise<ChatResponse | ErrorResponse>;
+        streamResponse: ({ message }: {
+            message: string;
+        }, options?: ChatOptionsConfig) => Readable & {
             cancel: () => void;
         };
         getChatHistory: () => Promise<ChatHistoryResponse | ErrorResponse>;
         getChatTitle: () => Promise<ChatTitle | ErrorResponse>;
         clearChat: () => Promise<ClearChat | ErrorResponse>;
-        updateTitle: (title: string) => Promise<UpdateTitleResponse | ErrorResponse>;
+        updateTitle: ({ title, }: {
+            title: string;
+        }) => Promise<UpdateTitleResponse | ErrorResponse>;
     };
     translate: {
-        translateText: (text: string, targetLanguage: Languages, sourceLanguage?: Languages) => Promise<TranslationResponseMapped | ErrorResponse>;
+        translateText: ({ text, targetLanguage, sourceLanguage, }: {
+            text: string;
+            targetLanguage: Languages;
+            sourceLanguage?: Languages;
+        }) => Promise<TranslationResponseMapped | ErrorResponse>;
         getHistory: () => Promise<TranslationHistoryResponse | ErrorResponse>;
     };
     tts: {
-        synthesize: (text: string, language: LanguageEnum, speaker_name?: string) => Promise<TTSResponse | ErrorResponse>;
+        synthesize: ({ text, language, speaker_name, }: {
+            text: string;
+            language: Languages;
+            speaker_name?: string;
+        }) => Promise<TTSResponse | ErrorResponse>;
         streamResponse: (request: TTSStreamRequest) => Readable & {
             cancel: () => void;
         };
-        getSpeakers: (language?: string) => Promise<SpeakersResponse | {
+        getSpeakers: ({ language, }: {
+            language?: Languages;
+        }) => Promise<SpeakersResponse | {
             success: false;
             message: string;
         }>;
@@ -54,11 +73,15 @@ export declare class HasabClient {
             success: false;
             message: string;
         }>;
-        getRecord: (recordId: number) => Promise<GetTTSRecordResponse | {
+        getRecord: ({ recordId, }: {
+            recordId: number;
+        }) => Promise<GetTTSRecordResponse | {
             success: false;
             message: string;
         }>;
-        deleteRecord: (recordId: number) => Promise<DeleteTTSRecordResponse | {
+        deleteRecord: ({ recordId, }: {
+            recordId: number;
+        }) => Promise<DeleteTTSRecordResponse | {
             success: false;
             message: string;
         }>;
