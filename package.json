@@ -1,6 +1,6 @@
 {
   "name": "hasab-sdk",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "Hasab AI SDK for Node.js (chat, TTS, transcription, translation)",
   "main": "dist/client.js",
   "types": "dist/client.d.ts",
