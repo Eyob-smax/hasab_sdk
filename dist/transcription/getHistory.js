@@ -1,16 +1,7 @@
 import { AxiosError } from "axios";
 import { HasabApiError, HasabNetworkError, HasabValidationError, HasabAuthError, HasabRateLimitError, HasabTimeoutError, HasabUnknownError, } from "../common/errors.js";
-/**
- * Fetches paginated list of user's transcription jobs.
- *
- * @param apikey - Your Hasab API key
- * @param client - Pre-configured Axios instance
- * @param options - Pagination options
- * @returns TranscriptionHistoryResponse
- */
 export async function getTranscriptionHistory(apikey, client, options = {}) {
     const { page = 1 } = options;
-    // === Input Validation ===
     if (!Number.isInteger(page) || page < 1) {
         throw new HasabValidationError("Page must be a positive integer.");
     }
@@ -26,7 +17,6 @@ export async function getTranscriptionHistory(apikey, client, options = {}) {
             timeout: 15000,
         });
         const data = response.data;
-        // === Response Validation ===
         if (!data || typeof data !== "object") {
             throw new HasabApiError("Invalid response format", 500);
         }
@@ -37,7 +27,6 @@ export async function getTranscriptionHistory(apikey, client, options = {}) {
             throw new HasabApiError("Missing or invalid 'data' in response", 500);
         }
         const payload = data.data;
-        // Validate required pagination fields
         const required = ["current_page", "data", "total", "per_page"];
         for (const field of required) {
             if (!(field in payload)) {
@@ -68,7 +57,6 @@ export async function getTranscriptionHistory(apikey, client, options = {}) {
         };
     }
     catch (error) {
-        // === Centralized Error Handling ===
         if (error instanceof HasabValidationError)
             throw error;
         if (error instanceof AxiosError) {

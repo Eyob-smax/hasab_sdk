@@ -210,6 +210,24 @@ type TTSAnalyticsResponse = {
     daily_usage: DailyUsage[];
 };
 type Languages = "amh" | "orm" | "tir" | "eng" | "auto";
+import { AxiosInstance } from "axios";
+import { HasabError } from "../common/errors.js";
+export interface ChatStreamOptions {
+    message: string;
+    model?: string;
+    client: AxiosInstance;
+    onData: StreamCallback;
+    onError?: (err: HasabError) => void;
+    onComplete?: () => void;
+}
+export type ChatOptionsConfig = {
+    maxTokens?: number;
+    tools?: any | null;
+    model?: string;
+    temperature?: number;
+    timeout?: number;
+};
+export type StreamCallback = (chunk: string) => void;
 type TTSHistoryRecord = {
     success: boolean;
     recors: {

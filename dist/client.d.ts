@@ -1,5 +1,4 @@
-import type { ChatHistoryResponse, ChatResponse, ChatTitle, ClearChat, DeleteTTSRecordResponse, GetTTSRecordResponse, Languages, SpeakersResponse, TranscriptionHistoryResponse, TranscriptionResponseFull, TranslationHistoryResponse, TranslationResponseMapped, TTSAnalyticsResponse, TTSHistoryResponse, TTSResponse } from "./types/index.js";
-import { ChatOptionsConfig } from "./common/types.js";
+import type { ChatHistoryResponse, ChatOptionsConfig, ChatResponse, ChatTitle, ClearChat, DeleteTTSRecordResponse, GetTTSRecordResponse, Languages, SpeakersResponse, TranscriptionHistoryResponse, TranscriptionResponseFull, TranslationHistoryResponse, TranslationResponseMapped, TTSAnalyticsResponse, TTSHistoryResponse, TTSResponse } from "./types/index.js";
 import { Readable } from "stream";
 import { UpdateTitleResponse } from "./chat/updateTitle.js";
 import { GetTTSHistoryOptions } from "./TTS/getHistory.js";
