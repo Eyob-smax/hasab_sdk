@@ -1,295 +1,327 @@
-<!DOCTYPE html>
-<html>
-<h1 align="center">HasabClient SDK</h1>
+# HasabClient SDK
 
-<p>
-  The <strong>HasabClient SDK</strong> is a TypeScript library for interacting with the Hasab API.
-  It provides a simple, type-safe interface for <strong>chat</strong>, <strong>transcription</strong>,
-  <strong>translation</strong>, and <strong>text-to-speech (TTS)</strong> synthesis.
-  Designed primarily for <strong>Node.js</strong> environments, it supports both
-  synchronous and streaming features with robust error handling.
-</p>
+The **HasabClient SDK** is a TypeScript library for interacting with the Hasab API. It provides a simple, type-safe interface for **chat**, **transcription**, **translation**, and **text-to-speech (TTS)** synthesis. The SDK supports both synchronous and streaming operations, with built-in error handling and support for Node.js environments.
 
-<hr/>
+## Features
 
-<h2>✨ Features</h2>
-<ul>
-  <li><strong>Chat:</strong> Send messages, stream responses, update titles, retrieve history, and clear conversations.</li>
-  <li><strong>Transcription:</strong> Upload audio, get full text + summaries, and retrieve transcription history.</li>
-  <li><strong>Translation:</strong> Translate text and retrieve translation history.</li>
-  <li><strong>TTS (Text-to-Speech):</strong> Synthesize audio, stream audio, retrieve speakers, history, analytics, and manage records.</li>
-</ul>
+- **Chat**: Send messages, stream responses, manage history, titles, and clear conversations.
+- **Transcription**: Upload audio for transcription and retrieve history.
+- **Translation**: Translate text and retrieve history.
+- **Text-to-Speech (TTS)**: Synthesize audio, stream audio, retrieve speakers, history, analytics, individual records, and delete records.
 
-<hr/>
+## Installation
 
-<h2>📦 Installation</h2>
+Install the SDK via npm (assuming it's published; otherwise, clone and build locally):
 
-<pre><code class="language-bash">npm install hasab-client
-</code></pre>
+```bash
+npm install hasab-client
+```
 
-<h3>Dependencies</h3>
-<p>The SDK internally uses:</p>
-<ul>
-  <li><code>axios</code></li>
-  <li><code>form-data</code></li>
-  <li><code>fs</code> (Node built-in)</li>
-  <li><code>stream</code> (Node built-in)</li>
-</ul>
+### Dependencies
 
-<p>If needed:</p>
-<pre><code class="language-bash">npm install axios form-data
-</code></pre>
+- `axios`: For HTTP requests.
+- `form-data`: For multipart uploads (transcription).
+- `fs` (Node.js built-in): For file handling.
+- `stream` (Node.js built-in): For streaming responses.
 
-<hr/>
+Add them if needed:
 
-<h2>🚀 Getting Started</h2>
+```bash
+npm install axios form-data
+```
 
-<h3>Initialize the client</h3>
+## Getting Started
 
-<pre><code class="language-ts">import { HasabClient, LanguageEnum } from "hasab-client";
+### Initialization
 
-const client = new HasabClient("YOUR_HASAB_API_KEY");
-</code></pre>
+Create a client instance with your Hasab API key:
 
-<hr/>
+```ts
+import { HasabClient } from "hasab-client";
 
-<h2>⚠️ Error Handling</h2>
-<p>
-All methods return the format:
-</p>
+const client = new HasabClient({ apikey: "YOUR_HASAB_API_KEY" });
+```
 
-<pre><code>{
-  success: boolean,
-  message?: string,
-}
-</code></pre>
+## Error Handling
 
-<p>Additional error types include:</p>
-<ul>
-  <li><code>HasabApiError</code></li>
-  <li><code>HasabValidationError</code></li>
-  <li><code>HasabNetworkError</code></li>
-  <li><code>HasabTimeoutError</code></li>
-</ul>
+All methods return `{ success: false, message: string }` on failure. Errors are instances of custom classes like `HasabApiError`, `HasabValidationError`, etc. Catch and handle as needed.
 
-<hr/>
+## Chat Features
 
-<h1>💬 Chat Features</h1>
+### Send Message (Synchronous)
 
-<h2>Send Message (Synchronous)</h2>
+Send a chat message and get a full response.
 
-<pre><code class="language-ts">try {
-  const response = await client.chat.sendMessage("Hello, how are you?", {
-    model: "hasab-1-lite",
-    temperature: 0.7,
-  });
-
+```ts
+try {
+  const response = await client.chat.sendMessage(
+    { message: "Hello, how are you?" },
+    { model: "hasab-1-lite", temperature: 0.7 }
+  );
   if (response.success) {
     console.log("Response:", response.content);
   } else {
     console.error("Error:", response.message);
   }
-} catch (err) {
-  console.error("Unexpected error:", err.message);
+} catch (error) {
+  console.error("Unexpected error:", error.message);
 }
-</code></pre>
+```
 
-<h2>Stream Chat Response</h2>
+### Stream Response
 
-<pre><code class="language-ts">import fs from "fs";
+Stream chat responses in real-time. Returns a `Readable` stream.
+
+```ts
+import fs from "fs";
 import { pipeline } from "stream/promises";
 
-const stream = client.chat.streamResponse("Tell me a story", { temperature: 0.8 });
+const stream = client.chat.streamResponse(
+  { message: "Tell me a story" },
+  { temperature: 0.8 }
+);
 
 stream.on("data", (chunk) => process.stdout.write(chunk));
 stream.on("error", (err) => console.error("Stream error:", err.message));
-stream.on("end", () => console.log("Done"));
+stream.on("end", () => console.log("\nDone"));
 
-// Save streamed output
+// Optional: Save to file
 await pipeline(stream, fs.createWriteStream("chat_output.txt"));
-</code></pre>
+```
 
-<h2>Get Chat History</h2>
+### Get Chat History
 
-<pre><code class="language-ts">const history = await client.chat.getChatHistory();
+Retrieve conversation history.
+
+```ts
+const history = await client.chat.getChatHistory();
 if (history.success) {
-  history.history.forEach((c) =>
-    console.log(`Chat ID: ${c.id}, Title: ${c.title ?? "Untitled"}`)
-  );
+  history.history.forEach((chat) => {
+    console.log(`Chat ID: ${chat.id}, Title: ${chat.title || "Untitled"}`);
+  });
 } else {
   console.error("Error:", history.message);
 }
-</code></pre>
+```
 
-<h2>Get Chat Title</h2>
+### Get Chat Title
 
-<pre><code class="language-ts">const title = await client.chat.getChatTitle();
-console.log(title.success ? title.title : title.message);
-</code></pre>
+Get the current conversation title.
 
-<h2>Clear Chat</h2>
+```ts
+const title = await client.chat.getChatTitle();
+if (title.success) {
+  console.log("Title:", title.title);
+} else {
+  console.error("Error:", title.message);
+}
+```
 
-<pre><code class="language-ts">const result = await client.chat.clearChat();
-console.log(result.message);
-</code></pre>
+### Clear Chat
 
-<h2>Update Chat Title</h2>
+Clear the current conversation.
 
-<pre><code class="language-ts">const result = await client.chat.updateTitle("New Chat Title");
-console.log(result.message);
-</code></pre>
-
-<hr/>
-
-<h1>🎙️ Transcription Features</h1>
-
-<h2>Transcribe Audio</h2>
-<pre><code class="language-ts">const result = await client.transcription.transcribe("path/to/audio.mp3");
-
+```ts
+const result = await client.chat.clearChat();
 if (result.success) {
-console.log("Text:", result.transcription);
-console.log("Summary:", result.summary);
+  console.log("Chat cleared:", result.message);
 } else {
-console.error("Error:", result.message);
+  console.error("Error:", result.message);
 }
-</code></pre>
+```
 
-<h2>Get Transcription History</h2>
-<pre><code class="language-ts">const history = await client.transcription.getHistory({ page: 1 });
+### Update Title
 
+Update the conversation title.
+
+```ts
+const result = await client.chat.updateTitle({ title: "New Title" });
+if (result.success) {
+  console.log("Updated:", result.message);
+} else {
+  console.error("Error:", result.message);
+}
+```
+
+## Transcription Features
+
+### Transcribe Audio
+
+Upload and transcribe an audio file.
+
+```ts
+const result = await client.transcription.transcribe({
+  file: "path/to/audio.mp3",
+});
+if (result.success) {
+  console.log("Transcription:", result.transcription);
+  console.log("Summary:", result.summary);
+} else {
+  console.error("Error:", result.message);
+}
+```
+
+### Get Transcription History
+
+Retrieve paginated transcription jobs.
+
+```ts
+const history = await client.transcription.getHistory({ page: 1 });
 if (history.success) {
-history.data.data.forEach((job) =>
-console.log(`Job ID: ${job.id}, File: ${job.original_filename}`)
-);
+  history.data.data.forEach((job) => {
+    console.log(`ID: ${job.id}, File: ${job.original_filename}`);
+  });
 } else {
-console.error("Error:", history.message);
+  console.error("Error:", history.message);
 }
-</code></pre>
+```
 
-<hr/>
+## Translation Features
 
-<h1>🌏 Translation Features</h1>
+### Translate Text
 
-<h2>Translate Text</h2>
+Translate text to a target language.
 
-<pre><code class="language-ts">const result = await client.translate.translateText(
-  "Hello, how are you?",
-  LanguageEnum.AMHARIC,
-  LanguageEnum.ENGLISH
-);
-
+```ts
+const result = await client.translate.translateText({
+  text: "Hello, how are you?",
+  targetLanguage: "amh",
+  sourceLanguage: "eng",
+});
 if (result.success) {
   console.log("Translated:", result.data.translation.translated_text);
 } else {
   console.error("Error:", result.message);
 }
-</code></pre>
+```
 
-<h2>Get Translation History</h2>
+### Get Translation History
 
-<pre><code class="language-ts">const history = await client.translate.getHistory();
+Retrieve translation history.
 
+```ts
+const history = await client.translate.getHistory();
 if (history.success) {
-  history.history.forEach((item) =>
-    console.log(`${item.source_text} → ${item.translated_text}`)
-  );
+  history.history.forEach((item) => {
+    console.log(`${item.source_text} → ${item.translated_text}`);
+  });
 } else {
   console.error("Error:", history.message);
 }
-</code></pre>
+```
 
-<hr/>
+## Text-to-Speech (TTS) Features
 
-<h1>🔊 Text-to-Speech (TTS) Features</h1>
+### Synthesize (Synchronous)
 
-<h2>Synthesize (Synchronous)</h2>
-<pre><code class="language-ts">import fs from "fs/promises";
+Generate speech audio (base64 buffer).
 
-const result = await client.tts.synthesize(
-"Hello, this is TTS.",
-LanguageEnum.ENGLISH,
-"default"
-);
+```ts
+import fs from "fs/promises";
 
+const result = await client.tts.synthesize({
+  text: "Hello, this is TTS.",
+  language: "eng",
+  speaker_name: "default",
+});
 if (result.success) {
-const buffer = Buffer.from(result.audio_buffer, "base64");
-await fs.writeFile("output.mp3", buffer);
-console.log("Audio saved.");
+  const buffer = Buffer.from(result.audio_buffer, "base64");
+  await fs.writeFile("output.mp3", buffer);
+  console.log("Audio saved.");
 } else {
-console.error("Error:", result.message);
+  console.error("Error:", result.message);
 }
-</code></pre>
+```
 
-<h2>Stream TTS Audio</h2>
-<pre><code class="language-ts">import fs from "fs";
+### Stream Response
+
+Stream TTS audio in real-time.
+
+```ts
+import fs from "fs";
 import { pipeline } from "stream/promises";
 
 const ttsStream = client.tts.streamResponse({
-text: "This is streaming TTS.",
-language: LanguageEnum.ENGLISH,
-speaker_name: "default",
-sample_rate: 22050,
+  text: "This is streaming TTS.",
+  language: "eng",
+  speaker_name: "default",
+  sample_rate: 22050,
 });
 
 await pipeline(ttsStream, fs.createWriteStream("output_stream.mp3"));
 console.log("Streamed audio saved.");
-</code></pre>
+```
 
-<h2>Get Speakers</h2>
-<pre><code class="language-ts">const speakers = await client.tts.getSpeakers("amh");
+### Get Speakers
 
+Retrieve available speakers, optionally by language.
+
+```ts
+const speakers = await client.tts.getSpeakers({ language: "amh" });
 if (speakers.success) {
-console.log("Amharic Speakers:", speakers.languages.amh);
+  console.log("Amharic Speakers:", speakers.languages.amh);
 } else {
-console.error("Error:", speakers.message);
+  console.error("Error:", speakers.message);
 }
-</code></pre>
+```
 
-<h2>Get TTS History</h2>
-<pre><code class="language-ts">const history = await client.tts.getHistory({ limit: 10 });
+### Get TTS History
 
+Retrieve TTS synthesis history.
+
+```ts
+const history = await client.tts.getHistory({ limit: 10 });
 if (history.success) {
-history.records.forEach((r) =>
-console.log(`ID: ${r.id} | Text: ${r.text}`)
-);
+  history.records.forEach((r) => console.log(`ID: ${r.id}, Text: ${r.text}`));
 } else {
-console.error("Error:", history.message);
+  console.error("Error:", history.message);
 }
-</code></pre>
+```
 
-<h2>Get TTS Analytics</h2>
-<pre><code class="language-ts">const analytics = await client.tts.getAnalytics({
-  date_from: "2025-10-01",
-});
+### Get TTS Analytics
 
+Retrieve TTS usage analytics.
+
+```ts
+const analytics = await client.tts.getAnalytics({ date_from: "2025-10-01" });
 if (analytics.success) {
-console.log("Total Tokens:", analytics.total_tokens_used);
+  console.log("Total Tokens:", analytics.total_tokens_used);
 } else {
-console.error("Error:", analytics.message);
+  console.error("Error:", analytics.message);
 }
-</code></pre>
+```
 
-<h2>Get TTS Record</h2>
-<pre><code class="language-ts">const record = await client.tts.getRecord(1);
+### Get TTS Record
 
+Retrieve a specific TTS record.
+
+```ts
+const record = await client.tts.getRecord({ recordId: 1 });
 if (record.success) {
-console.log("Text:", record.record.text);
-console.log("Audio URL:", record.record.audio_url);
+  console.log("Text:", record.record.text);
+  console.log("Audio URL:", record.record.audio_url);
 } else {
-console.error("Error:", record.message);
+  console.error("Error:", record.message);
 }
-</code></pre>
+```
 
-<h2>Delete TTS Record</h2>
-<pre><code class="language-ts">const result = await client.tts.deleteRecord(1);
-console.log(result.message);
-</code></pre>
+### Delete TTS Record
 
-<hr/>
+Delete a TTS record.
 
-<h2>🤝 Contributing</h2>
-<p>Pull requests are welcome! Fork the repo, make updates, and submit a PR.</p>
+```ts
+const result = await client.tts.deleteRecord({ recordId: 1 });
+if (result.success) {
+  console.log("Deleted:", result.message);
+} else {
+  console.error("Error:", result.message);
+}
+```
 
-<h2>📄 License</h2>
-<p>MIT License — see <code>LICENSE</code> for details.</p>
-</html>
+## Contributing
+
+Contributions are welcome! Fork the repo, make changes, and submit a pull request.
+
+## License
+
+MIT License. See [LICENSE](LICENSE) for details.
