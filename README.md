@@ -47,7 +47,7 @@ npm install axios
 Create a client instance with your Hasab API key:
 
 ```ts
-import { HasabClient } from "hasab-client";
+import { HasabClient } from "hasab-sdk";
 
 const client = new HasabClient({ apikey: "YOUR_HASAB_API_KEY" });
 ```
